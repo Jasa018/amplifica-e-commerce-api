@@ -74,6 +74,21 @@
         .btn-delete:hover {
             text-decoration: underline;
         }
+        .btn-create {
+            display: inline-block;
+            background-color: #65865d; /* Color 3 */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+        .btn-create:hover {
+            background-color: #456547; /* Color 2 */
+        }
     </style>
 </head>
 <body>
@@ -85,6 +100,7 @@
         @endif
 
         <h1>Lista de Productos</h1>
+        <a href="{{ route('products.create') }}" class="btn-create">Crear Nuevo Producto</a>
         <table>
             <thead>
                 <tr>
