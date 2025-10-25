@@ -8,3 +8,4 @@ Route::get('/', function () {
 });
 
 Route::resource('products', ProductController::class);
+"\nRoute::get('/test-pedidos', function() { return App\Models\Pedido::count(); });" 
