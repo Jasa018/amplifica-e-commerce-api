@@ -2,17 +2,17 @@
 
 namespace Database\Seeders;
 
-use App\Models\Pedido;
+use App\Models\Order;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
-class PedidoSeeder extends Seeder
+class OrderSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        Pedido::factory(20)->create();
+        Order::factory(20)->create();
     }
 }
