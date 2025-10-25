@@ -19,4 +19,9 @@ class Order extends Model
         'fecha',
         'total',
     ];
+
+    public function orderDetails()
+    {
+        return $this->hasMany(OrderDetail::class);
+    }
 }

@@ -18,4 +18,9 @@ class Product extends Model
         'length',
         'stock',
     ];
+
+    public function orderDetails()
+    {
+        return $this->hasMany(OrderDetail::class);
+    }
 }
