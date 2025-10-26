@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\ProductController;
 use App\Http\Controllers\Web\OrderController;
 use App\Http\Controllers\Web\OrderDetailController;
 use App\Http\Controllers\Web\CotizacionController;
+use App\Http\Controllers\Web\UserController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -26,6 +27,7 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::resource('products', ProductController::class);
     Route::resource('orders', OrderController::class);
     Route::resource('order-details', OrderDetailController::class);
+    Route::resource('users', UserController::class);
     
     // Rutas de cotización
     Route::get('/cotizaciones', [CotizacionController::class, 'index'])->name('cotizaciones.index');
@@ -326,6 +328,135 @@ Route::get('/api/swagger.json', function () {
                     'summary' => 'Crear pedido',
                     'security' => [['bearerAuth' => []]],
                     'responses' => ['201' => ['description' => 'Pedido creado']]
+                ]
+            ],
+            '/users' => [
+                'get' => [
+                    'tags' => ['Usuarios'],
+                    'summary' => 'Listar usuarios',
+                    'security' => [['bearerAuth' => []]],
+                    'responses' => [
+                        '200' => [
+                            'description' => 'Lista de usuarios',
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type' => 'object',
+                                        'properties' => [
+                                            'data' => [
+                                                'type' => 'array',
+                                                'items' => [
+                                                    'type' => 'object',
+                                                    'properties' => [
+                                                        'id' => ['type' => 'integer'],
+                                                        'name' => ['type' => 'string'],
+                                                        'email' => ['type' => 'string'],
+                                                        'created_at' => ['type' => 'string'],
+                                                        'updated_at' => ['type' => 'string']
+                                                    ]
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
+                'post' => [
+                    'tags' => ['Usuarios'],
+                    'summary' => 'Crear usuario',
+                    'security' => [['bearerAuth' => []]],
+                    'requestBody' => [
+                        'required' => true,
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'required' => ['name', 'email', 'password'],
+                                    'properties' => [
+                                        'name' => ['type' => 'string'],
+                                        'email' => ['type' => 'string', 'format' => 'email'],
+                                        'password' => ['type' => 'string', 'minLength' => 8]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'responses' => [
+                        '201' => ['description' => 'Usuario creado'],
+                        '422' => ['description' => 'Error de validación']
+                    ]
+                ]
+            ],
+            '/users/{id}' => [
+                'get' => [
+                    'tags' => ['Usuarios'],
+                    'summary' => 'Obtener usuario',
+                    'security' => [['bearerAuth' => []]],
+                    'parameters' => [
+                        [
+                            'name' => 'id',
+                            'in' => 'path',
+                            'required' => true,
+                            'schema' => ['type' => 'integer']
+                        ]
+                    ],
+                    'responses' => [
+                        '200' => ['description' => 'Usuario encontrado'],
+                        '404' => ['description' => 'Usuario no encontrado']
+                    ]
+                ],
+                'put' => [
+                    'tags' => ['Usuarios'],
+                    'summary' => 'Actualizar usuario',
+                    'security' => [['bearerAuth' => []]],
+                    'parameters' => [
+                        [
+                            'name' => 'id',
+                            'in' => 'path',
+                            'required' => true,
+                            'schema' => ['type' => 'integer']
+                        ]
+                    ],
+                    'requestBody' => [
+                        'required' => true,
+                        'content' => [
+                            'application/json' => [
+                                'schema' => [
+                                    'type' => 'object',
+                                    'required' => ['name', 'email'],
+                                    'properties' => [
+                                        'name' => ['type' => 'string'],
+                                        'email' => ['type' => 'string', 'format' => 'email'],
+                                        'password' => ['type' => 'string', 'minLength' => 8]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ],
+                    'responses' => [
+                        '200' => ['description' => 'Usuario actualizado'],
+                        '422' => ['description' => 'Error de validación']
+                    ]
+                ],
+                'delete' => [
+                    'tags' => ['Usuarios'],
+                    'summary' => 'Eliminar usuario',
+                    'security' => [['bearerAuth' => []]],
+                    'parameters' => [
+                        [
+                            'name' => 'id',
+                            'in' => 'path',
+                            'required' => true,
+                            'schema' => ['type' => 'integer']
+                        ]
+                    ],
+                    'responses' => [
+                        '200' => ['description' => 'Usuario eliminado'],
+                        '403' => ['description' => 'No se puede eliminar usuario propio'],
+                        '404' => ['description' => 'Usuario no encontrado']
+                    ]
                 ]
             ]
         ]

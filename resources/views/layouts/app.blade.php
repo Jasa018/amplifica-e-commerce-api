@@ -33,6 +33,9 @@
                         <a href="{{ route('cotizaciones.index') }}" class="{{ request()->routeIs('cotizaciones.*') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Cotizaciones
                         </a>
+                        <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Usuarios
+                        </a>
                         <a href="{{ route('swagger.docs') }}" target="_blank" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             API Docs
                         </a>

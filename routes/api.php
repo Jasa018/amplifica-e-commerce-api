@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\HistorialCotizacionController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderDetailController;
+use App\Http\Controllers\Api\UserController;
 
 // Rutas públicas de autenticación
 Route::post('/auth/login', [AuthController::class, 'login'])->name('api.auth.login');
@@ -22,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('products', ProductController::class);
         Route::apiResource('orders', OrderController::class);
         Route::apiResource('order-details', OrderDetailController::class);
+        Route::apiResource('users', UserController::class);
         Route::apiResource('historial-cotizaciones', HistorialCotizacionController::class, ['only' => ['index', 'show', 'destroy']]);
     });
     

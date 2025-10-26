@@ -121,6 +121,13 @@ La documentación interactiva de la API está disponible en:
 - `PUT /api/orders/{id}` - Actualizar pedido
 - `DELETE /api/orders/{id}` - Eliminar pedido
 
+#### Usuarios
+- `GET /api/users` - Listar usuarios
+- `POST /api/users` - Crear usuario
+- `GET /api/users/{id}` - Obtener usuario
+- `PUT /api/users/{id}` - Actualizar usuario
+- `DELETE /api/users/{id}` - Eliminar usuario
+
 #### Cotizaciones
 - `POST /api/cotizar-envio` - Cotizar envío
 - `GET /api/historial-cotizaciones` - Obtener historial de cotizaciones
@@ -150,6 +157,13 @@ El dashboard muestra un resumen del sistema con:
 - **Editar pedidos** existentes con productos dinámicos
 - **Eliminar pedidos** del sistema
 - **Visualización detallada** de cada pedido
+
+### Gestión de Usuarios
+- **Crear usuarios** con información completa (nombre, email, contraseña)
+- **Editar usuarios** existentes con actualización opcional de contraseña
+- **Eliminar usuarios** del sistema (con protección contra auto-eliminación)
+- **Visualizar lista** de todos los usuarios registrados
+- **Ver detalles** de usuarios individuales
 
 ### Sistema de Cotizaciones
 - **Selección de región y comuna** en cascada
@@ -366,6 +380,18 @@ Todas las respuestas de la API utilizan **Resource Collections** para estructura
 }
 ```
 
+#### UserResource
+```json
+{
+  "id": 1,
+  "name": "Juan Pérez",
+  "email": "juan@example.com",
+  "email_verified_at": "2024-01-01 12:00:00",
+  "created_at": "2024-01-01 12:00:00",
+  "updated_at": "2024-01-01 12:00:00"
+}
+```
+
 ## 🧪 Tests Automatizados con PHPUnit
 
 ### Cobertura de Tests
@@ -377,9 +403,10 @@ El proyecto incluye una suite completa de tests automatizados que cubren:
 - **AmplificaApiServiceTest**: Integración con API externa y cache de tokens
 - **HelperTest**: Configuración del entorno de testing
 
-#### Tests de Feature (`tests/Feature/`) - ✅ 36/36 Pasando
+#### Tests de Feature (`tests/Feature/`) - ✅ 45/45 Pasando
 - **ProductApiTest**: ✅ CRUD completo de productos via API
 - **OrderApiTest**: ✅ Gestión de pedidos 
+- **UserApiTest**: ✅ CRUD completo de usuarios con autenticación y validaciones
 - **AuthApiTest**: ✅ Autenticación JWT y manejo de sesiones
 - **CotizacionApiTest**: ✅ Cotizaciones de envío
 - **HistorialCotizacionApiTest**: ✅ Historial de cotizaciones con Resource Collections
