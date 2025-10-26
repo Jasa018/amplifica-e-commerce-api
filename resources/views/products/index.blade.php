@@ -11,13 +11,43 @@
         @endif
 
         <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold text-gray-800">Lista de Productos</h2>
                 <a href="{{ route('products.create') }}" 
                    class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105">
                     Crear Nuevo Producto
                 </a>
             </div>
+            
+            <!-- Filtros -->
+            <form method="GET" class="bg-gray-50 p-4 rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                        <input type="text" name="name" value="{{ request('name') }}" placeholder="Buscar por nombre" class="w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Precio Mín</label>
+                        <input type="number" name="price_min" value="{{ request('price_min') }}" step="0.01" class="w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Precio Máx</label>
+                        <input type="number" name="price_max" value="{{ request('price_max') }}" step="0.01" class="w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Stock Mín</label>
+                        <input type="number" name="stock_min" value="{{ request('stock_min') }}" class="w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Stock Máx</label>
+                        <input type="number" name="stock_max" value="{{ request('stock_max') }}" class="w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                </div>
+                <div class="mt-4 flex space-x-2">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">Filtrar</button>
+                    <a href="{{ route('products.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md">Limpiar</a>
+                </div>
+            </form>
         </div>
 
         <div class="overflow-x-auto">
@@ -65,6 +95,11 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+        
+        <!-- Paginación -->
+        <div class="px-6 py-4">
+            {{ $products->links() }}
         </div>
     </div>
 @endsection

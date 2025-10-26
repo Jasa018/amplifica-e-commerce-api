@@ -16,10 +16,32 @@ class OrderController extends Controller
     {
         $this->middleware(['web', 'auth']);
     }
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $orders = Order::with('orderDetails.product')->get();
+            $query = Order::with('orderDetails.product');
+            
+            if ($request->filled('cliente_nombre')) {
+                $query->where('cliente_nombre', 'like', '%' . $request->cliente_nombre . '%');
+            }
+            
+            if ($request->filled('fecha_desde')) {
+                $query->where('fecha', '>=', $request->fecha_desde);
+            }
+            
+            if ($request->filled('fecha_hasta')) {
+                $query->where('fecha', '<=', $request->fecha_hasta);
+            }
+            
+            if ($request->filled('total_min')) {
+                $query->where('total', '>=', $request->total_min);
+            }
+            
+            if ($request->filled('total_max')) {
+                $query->where('total', '<=', $request->total_max);
+            }
+            
+            $orders = $query->paginate(10)->withQueryString();
             return view('orders.index', compact('orders'));
         } catch (\Exception $e) {
             Log::error('Error loading orders', ['error' => $e->getMessage()]);

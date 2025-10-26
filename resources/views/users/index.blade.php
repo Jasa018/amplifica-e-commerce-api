@@ -11,6 +11,28 @@
                 Crear Usuario
             </a>
         </div>
+        
+        <!-- Filtros -->
+        <form method="GET" class="bg-gray-50 p-4 rounded-lg mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Nombre o email" class="w-full border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Creado Desde</label>
+                    <input type="date" name="created_desde" value="{{ request('created_desde') }}" class="w-full border-gray-300 rounded-md shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Creado Hasta</label>
+                    <input type="date" name="created_hasta" value="{{ request('created_hasta') }}" class="w-full border-gray-300 rounded-md shadow-sm">
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-2">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">Filtrar</button>
+                <a href="{{ route('users.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md">Limpiar</a>
+            </div>
+        </form>
 
         @if(session('success'))
             <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">

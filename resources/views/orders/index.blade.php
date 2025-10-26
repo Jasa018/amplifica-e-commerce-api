@@ -11,13 +11,43 @@
         @endif
 
         <div class="px-6 py-4 border-b border-gray-200">
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold text-gray-800">Lista de Pedidos</h2>
                 <a href="{{ route('orders.create') }}" 
                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105">
                     Crear Nuevo Pedido
                 </a>
             </div>
+            
+            <!-- Filtros -->
+            <form method="GET" class="bg-gray-50 p-4 rounded-lg">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Cliente</label>
+                        <input type="text" name="cliente_nombre" value="{{ request('cliente_nombre') }}" placeholder="Buscar por cliente" class="w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Desde</label>
+                        <input type="date" name="fecha_desde" value="{{ request('fecha_desde') }}" class="w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Hasta</label>
+                        <input type="date" name="fecha_hasta" value="{{ request('fecha_hasta') }}" class="w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Mín</label>
+                        <input type="number" name="total_min" value="{{ request('total_min') }}" step="0.01" class="w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Máx</label>
+                        <input type="number" name="total_max" value="{{ request('total_max') }}" step="0.01" class="w-full border-gray-300 rounded-md shadow-sm">
+                    </div>
+                </div>
+                <div class="mt-4 flex space-x-2">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">Filtrar</button>
+                    <a href="{{ route('orders.index') }}" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md">Limpiar</a>
+                </div>
+            </form>
         </div>
 
         <div class="overflow-x-auto">
@@ -73,6 +103,11 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+        
+        <!-- Paginación -->
+        <div class="px-6 py-4">
+            {{ $orders->links() }}
         </div>
     </div>
 @endsection

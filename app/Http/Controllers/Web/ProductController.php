@@ -13,10 +13,32 @@ class ProductController extends Controller
     {
         $this->middleware(['web', 'auth']);
     }
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $products = Product::with('orderDetails.order')->get();
+            $query = Product::query();
+            
+            if ($request->filled('name')) {
+                $query->where('name', 'like', '%' . $request->name . '%');
+            }
+            
+            if ($request->filled('price_min')) {
+                $query->where('price', '>=', $request->price_min);
+            }
+            
+            if ($request->filled('price_max')) {
+                $query->where('price', '<=', $request->price_max);
+            }
+            
+            if ($request->filled('stock_min')) {
+                $query->where('stock', '>=', $request->stock_min);
+            }
+            
+            if ($request->filled('stock_max')) {
+                $query->where('stock', '<=', $request->stock_max);
+            }
+            
+            $products = $query->paginate(10)->withQueryString();
             return view('products.index', compact('products'));
         } catch (\Exception $e) {
             Log::error('Error loading products', ['error' => $e->getMessage()]);

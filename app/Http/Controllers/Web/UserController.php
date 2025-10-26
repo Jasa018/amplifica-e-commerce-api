@@ -10,9 +10,26 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::paginate(10);
+        $query = User::query();
+        
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('email', 'like', '%' . $request->search . '%');
+            });
+        }
+        
+        if ($request->filled('created_desde')) {
+            $query->where('created_at', '>=', $request->created_desde);
+        }
+        
+        if ($request->filled('created_hasta')) {
+            $query->where('created_at', '<=', $request->created_hasta . ' 23:59:59');
+        }
+        
+        $users = $query->paginate(10)->withQueryString();
         return view('users.index', compact('users'));
     }
 
