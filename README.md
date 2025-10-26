@@ -122,7 +122,10 @@ La documentación interactiva de la API está disponible en:
 - `DELETE /api/orders/{id}` - Eliminar pedido
 
 #### Cotizaciones
-- `POST /api/cotizar` - Cotizar envío
+- `POST /api/cotizar-envio` - Cotizar envío
+- `GET /api/historial-cotizaciones` - Obtener historial de cotizaciones
+- `GET /api/historial-cotizaciones/{id}` - Obtener detalle de cotización
+- `DELETE /api/historial-cotizaciones/{id}` - Eliminar cotización del historial
 
 ---
 
@@ -154,6 +157,8 @@ El dashboard muestra un resumen del sistema con:
 - **Cálculo automático de peso total** (peso unitario × cantidad)
 - **Integración con API externa** de Amplifica
 - **Visualización de tarifas** disponibles (Express, Estándar, Económica)
+- **Persistencia del historial** de cotizaciones por usuario
+- **Gestión del historial** (ver, eliminar cotizaciones anteriores)
 - **Manejo de errores** de conexión y autenticación
 
 ---
@@ -203,6 +208,53 @@ El dashboard muestra un resumen del sistema con:
 - **Cache de tokens** con renovación automática
 - **Documentación interactiva** con Swagger UI
 - **Resource Collections** para estructurar respuestas de API
+
+---
+
+## 📋 Persistencia del Historial de Cotizaciones
+
+### Funcionalidad Implementada
+El sistema guarda automáticamente todas las cotizaciones realizadas por usuarios autenticados:
+
+#### Características del Historial
+- **Persistencia automática** de cada cotización realizada
+- **Asociación por usuario** - cada usuario ve solo su historial
+- **Información completa** guardada: origen, destino, productos, tarifas, peso total
+- **Gestión del historial** via API y interfaz web
+
+#### Endpoints del Historial
+```bash
+# Obtener historial del usuario (últimas 10 por defecto)
+GET /api/historial-cotizaciones?limit=20
+
+# Ver detalle de cotización específica
+GET /api/historial-cotizaciones/{id}
+
+# Eliminar cotización del historial
+DELETE /api/historial-cotizaciones/{id}
+```
+
+#### Estructura de Datos Guardados
+```json
+{
+  "id": 1,
+  "user_id": 1,
+  "region_origen": "Metropolitana",
+  "comuna_origen": "Santiago",
+  "region_destino": "Valparaíso",
+  "comuna_destino": "Viña del Mar",
+  "peso_total": 3.50,
+  "productos": [
+    {"weight": 1.5, "quantity": 2},
+    {"weight": 0.5, "quantity": 1}
+  ],
+  "tarifas": [
+    {"name": "Express", "price": 5000},
+    {"name": "Estándar", "price": 3000}
+  ],
+  "created_at": "2024-01-01 12:00:00"
+}
+```
 
 ---
 
@@ -272,11 +324,12 @@ El proyecto incluye una suite completa de tests automatizados que cubren:
 - **AmplificaApiServiceTest**: Integración con API externa y cache de tokens
 - **HelperTest**: Configuración del entorno de testing
 
-#### Tests de Feature (`tests/Feature/`) - ✅ 22/22 Pasando
+#### Tests de Feature (`tests/Feature/`) - ✅ 36/36 Pasando
 - **ProductApiTest**: ✅ CRUD completo de productos via API
 - **OrderApiTest**: ✅ Gestión de pedidos 
 - **AuthApiTest**: ✅ Autenticación JWT y manejo de sesiones
-- **CotizacionApiTest**: ⚠️ Cotizaciones de envío
+- **CotizacionApiTest**: ✅ Cotizaciones de envío
+- **HistorialCotizacionApiTest**: ✅ Historial de cotizaciones con Resource Collections
 - **WebRoutesTest**: ✅ Rutas web y autenticación
 
 ### Ejecutar Tests

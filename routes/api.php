@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CotizacionController;
+use App\Http\Controllers\Api\HistorialCotizacionController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderDetailController;
@@ -21,8 +22,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('products', ProductController::class);
         Route::apiResource('orders', OrderController::class);
         Route::apiResource('order-details', OrderDetailController::class);
+        Route::apiResource('historial-cotizaciones', HistorialCotizacionController::class, ['only' => ['index', 'show', 'destroy']]);
     });
+    
+    // Cotizaciones
+    Route::post('/cotizar-envio', [CotizacionController::class, 'cotizar']);
 });
 
-// Amplifica rutas
-Route::post('/cotizar-envio', [CotizacionController::class, 'cotizar']);

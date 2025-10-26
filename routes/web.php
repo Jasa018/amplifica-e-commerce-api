@@ -30,6 +30,11 @@ Route::middleware(['web', 'auth'])->group(function () {
     // Rutas de cotización
     Route::get('/cotizaciones', [CotizacionController::class, 'index'])->name('cotizaciones.index');
     Route::post('/cotizar-envio', [CotizacionController::class, 'cotizar'])->name('cotizar-envio');
+    
+    // Rutas web para historial de cotizaciones
+    Route::get('/historial-cotizaciones', [CotizacionController::class, 'historial'])->name('historial.index');
+    Route::get('/historial-cotizaciones/{id}', [CotizacionController::class, 'detalle'])->name('historial.show');
+    Route::delete('/historial-cotizaciones/{id}', [CotizacionController::class, 'eliminar'])->name('historial.destroy');
 });
 
 // Rutas de documentación Swagger (públicas)
@@ -173,7 +178,89 @@ Route::get('/api/swagger.json', function () {
                     ]
                 ]
             ],
-            '/cotizar' => [
+            '/historial-cotizaciones' => [
+                'get' => [
+                    'tags' => ['Cotizaciones'],
+                    'summary' => 'Obtener historial de cotizaciones',
+                    'security' => [['bearerAuth' => []]],
+                    'parameters' => [
+                        [
+                            'name' => 'limit',
+                            'in' => 'query',
+                            'description' => 'Número de registros a obtener',
+                            'schema' => ['type' => 'integer', 'default' => 10]
+                        ]
+                    ],
+                    'responses' => [
+                        '200' => [
+                            'description' => 'Historial de cotizaciones',
+                            'content' => [
+                                'application/json' => [
+                                    'schema' => [
+                                        'type' => 'object',
+                                        'properties' => [
+                                            'data' => [
+                                                'type' => 'array',
+                                                'items' => [
+                                                    'type' => 'object',
+                                                    'properties' => [
+                                                        'id' => ['type' => 'integer'],
+                                                        'region' => ['type' => 'string'],
+                                                        'comuna' => ['type' => 'string'],
+                                                        'peso_total' => ['type' => 'number'],
+                                                        'productos' => ['type' => 'array'],
+                                                        'tarifas' => ['type' => 'array'],
+                                                        'created_at' => ['type' => 'string']
+                                                    ]
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ],
+                        '401' => ['description' => 'No autenticado'],
+                        '500' => ['description' => 'Error del servidor']
+                    ]
+                ]
+            ],
+            '/historial-cotizaciones/{id}' => [
+                'get' => [
+                    'tags' => ['Cotizaciones'],
+                    'summary' => 'Obtener detalle de cotización',
+                    'security' => [['bearerAuth' => []]],
+                    'parameters' => [
+                        [
+                            'name' => 'id',
+                            'in' => 'path',
+                            'required' => true,
+                            'schema' => ['type' => 'integer']
+                        ]
+                    ],
+                    'responses' => [
+                        '200' => ['description' => 'Detalle de cotización'],
+                        '404' => ['description' => 'Cotización no encontrada']
+                    ]
+                ],
+                'delete' => [
+                    'tags' => ['Cotizaciones'],
+                    'summary' => 'Eliminar cotización del historial',
+                    'security' => [['bearerAuth' => []]],
+                    'parameters' => [
+                        [
+                            'name' => 'id',
+                            'in' => 'path',
+                            'required' => true,
+                            'schema' => ['type' => 'integer']
+                        ]
+                    ],
+                    'responses' => [
+                        '200' => ['description' => 'Cotización eliminada'],
+                        '404' => ['description' => 'Cotización no encontrada']
+                    ]
+                ]
+            ],
+            '/cotizar-envio' => [
                 'post' => [
                     'tags' => ['Cotizaciones'],
                     'summary' => 'Cotizar envío',

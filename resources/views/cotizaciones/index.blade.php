@@ -4,11 +4,18 @@
 
 @section('content')
 <div class="bg-white shadow rounded-lg overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h2 class="text-2xl font-bold text-gray-800">Cotizar Envío</h2>
+        <button onclick="abrirHistorial()" 
+                class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-md flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Historial
+        </button>
     </div>
 
-    <div class="p-6" x-data="cotizacionForm()">
+    <div class="p-6" x-data="cotizacionData()">
         @if(isset($error))
             <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
                 Error al cargar configuración regional: {{ $error }}
@@ -118,6 +125,72 @@
         <div x-show="error" class="mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
             <p x-text="error"></p>
         </div>
+        
+        <!-- Modal Historial -->
+        <div id="modalHistorial" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 hidden" onclick="this.classList.add('hidden')">
+            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">Historial de Cotizaciones</h3>
+                    <button onclick="document.getElementById('modalHistorial').classList.add('hidden')" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div id="historialContent" class="text-center py-8 text-gray-500">
+                    <p>Cargando historial...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Detalle -->
+        <div x-show="showDetalle" x-cloak class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" @click="showDetalle = false">
+            <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-md bg-white" @click.stop>
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-900">Detalle de Cotización</h3>
+                    <button @click="showDetalle = false" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div x-show="detalleCotizacion">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <p class="font-semibold">Destino:</p>
+                            <p x-text="detalleCotizacion?.comuna_destino"></p>
+                        </div>
+                        <div>
+                            <p class="font-semibold">Peso Total:</p>
+                            <p x-text="(detalleCotizacion?.peso_total || 0) + ' kg'"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <p class="font-semibold mb-2">Productos:</p>
+                        <template x-for="producto in (detalleCotizacion?.productos || [])" :key="producto">
+                            <div class="bg-gray-50 p-2 rounded mb-2">
+                                <p x-text="'Peso: ' + producto.weight + ' kg - Cantidad: ' + producto.quantity"></p>
+                            </div>
+                        </template>
+                    </div>
+                    
+                    <div>
+                        <p class="font-semibold mb-2">Tarifas:</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <template x-for="tarifa in (detalleCotizacion?.tarifas || [])" :key="tarifa">
+                                <div class="bg-blue-50 p-3 rounded">
+                                    <p class="font-medium" x-text="tarifa.name || 'Sin nombre'"></p>
+                                    <p class="text-lg font-bold text-blue-600" x-text="'$' + (tarifa.price || 0).toLocaleString()"></p>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -125,8 +198,13 @@
 const regionalConfig = @json($regionalConfig);
 const products = @json($products);
 
-function cotizacionForm() {
+function cotizacionData() {
     return {
+        showHistorial: false,
+        loadingHistorial: false,
+        historial: [],
+        showDetalle: false,
+        detalleCotizacion: null,
         form: {
             comuna: ''
         },
@@ -136,6 +214,7 @@ function cotizacionForm() {
         loading: false,
         resultado: null,
         error: null,
+
         
         updateComunas() {
             const region = regionalConfig.find(r => r && r.region === this.selectedRegion);
@@ -191,8 +270,12 @@ function cotizacionForm() {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                     },
                     body: JSON.stringify({
+                        region: this.selectedRegion,
                         comuna: this.form.comuna,
-                        products: productsArray
+                        products: productsArray.map((item, index) => ({
+                            ...item,
+                            product_id: this.items[index].product_id
+                        }))
                     })
                 });
                 
@@ -209,9 +292,260 @@ function cotizacionForm() {
             } finally {
                 this.loading = false;
             }
+        },
+        
+        async cargarHistorial() {
+            this.loadingHistorial = true;
+            try {
+                const response = await fetch('/api/historial-cotizaciones', {
+                    headers: {
+                        'Authorization': 'Bearer ' + (localStorage.getItem('api_token') || ''),
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    this.historial = await response.json();
+                } else {
+                    console.error('Error cargando historial');
+                }
+            } catch (e) {
+                console.error('Error:', e);
+            } finally {
+                this.loadingHistorial = false;
+            }
+        },
+        
+        async verDetalle(id) {
+            try {
+                const response = await fetch(`/api/historial-cotizaciones/${id}`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + (localStorage.getItem('api_token') || ''),
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    this.detalleCotizacion = await response.json();
+                    this.showDetalle = true;
+                }
+            } catch (e) {
+                console.error('Error:', e);
+            }
+        },
+        
+        async eliminarCotizacion(id) {
+            if (confirm('¿Está seguro de eliminar esta cotización?')) {
+                try {
+                    const response = await fetch(`/api/historial-cotizaciones/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': 'Bearer ' + (localStorage.getItem('api_token') || ''),
+                            'Accept': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        this.historial = this.historial.filter(c => c.id !== id);
+                    }
+                } catch (e) {
+                    console.error('Error:', e);
+                }
+            }
+        },
+        
+        async cargarHistorialWeb() {
+            this.loadingHistorial = true;
+            try {
+                const response = await fetch('/historial-cotizaciones', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                if (response.ok) {
+                    this.historial = await response.json();
+                } else {
+                    console.error('Error cargando historial');
+                }
+            } catch (e) {
+                console.error('Error:', e);
+            } finally {
+                this.loadingHistorial = false;
+            }
+        },
+        
+        async verDetalleWeb(id) {
+            try {
+                const response = await fetch(`/historial-cotizaciones/${id}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+                
+                if (response.ok) {
+                    this.detalleCotizacion = await response.json();
+                    this.showDetalle = true;
+                }
+            } catch (e) {
+                console.error('Error:', e);
+            }
+        },
+        
+        async eliminarCotizacionWeb(id) {
+            if (confirm('¿Está seguro de eliminar esta cotización?')) {
+                try {
+                    const response = await fetch(`/historial-cotizaciones/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        this.historial = this.historial.filter(c => c.id !== id);
+                    }
+                } catch (e) {
+                    console.error('Error:', e);
+                }
+            }
+        },
+        
+        toggleHistorial() {
+            this.showHistorial = !this.showHistorial;
+            if (this.showHistorial) {
+                this.cargarHistorialWeb();
+            }
         }
     }
 }
+
+// Función para abrir historial
+async function abrirHistorial() {
+    document.getElementById('modalHistorial').classList.remove('hidden');
+    
+    try {
+        const response = await fetch('/historial-cotizaciones', {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+        
+        if (response.ok) {
+            const historial = await response.json();
+            mostrarHistorial(historial);
+        } else {
+            document.getElementById('historialContent').innerHTML = '<p class="text-red-500">Error al cargar historial</p>';
+        }
+    } catch (e) {
+        console.error('Error:', e);
+        document.getElementById('historialContent').innerHTML = '<p class="text-red-500">Error de conexión</p>';
+    }
+}
+
+// Función para mostrar historial
+function mostrarHistorial(historial) {
+    const content = document.getElementById('historialContent');
+    
+    if (historial.length === 0) {
+        content.innerHTML = '<p class="text-gray-500">No hay cotizaciones en el historial</p>';
+        return;
+    }
+    
+    let html = '<div class="max-h-96 overflow-y-auto">';
+    historial.forEach(cotizacion => {
+        // Productos
+        let productosHtml = '';
+        if (cotizacion.productos && cotizacion.productos.length > 0) {
+            productosHtml = cotizacion.productos.map(p => 
+                `<span class="text-xs bg-gray-100 px-2 py-1 rounded">${p.name || 'Producto'}: ${p.weight}kg x${p.quantity}</span>`
+            ).join(' ');
+        }
+        
+        // Tarifas
+        let tarifasHtml = '';
+        if (cotizacion.tarifas && cotizacion.tarifas.length > 0) {
+            tarifasHtml = cotizacion.tarifas.map(t => 
+                `<span class="text-xs bg-blue-100 px-2 py-1 rounded">${t.name || 'Tarifa'}: $${(t.price || 0).toLocaleString()}</span>`
+            ).join(' ');
+        }
+        
+        html += `
+            <div id="cotizacion-${cotizacion.id}" class="border border-gray-200 rounded-lg p-4 mb-3">
+                <div class="space-y-2">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <p class="font-semibold text-gray-900">${cotizacion.region || 'Región'} - ${cotizacion.comuna}</p>
+                        </div>
+                        <button onclick="eliminarCotizacion(${cotizacion.id})" class="text-red-600 hover:text-red-800 text-sm px-2 py-1 border border-red-300 rounded">Eliminar</button>
+                    </div>
+                    
+                    <div>
+                        <p class="text-sm font-medium text-gray-700">Productos:</p>
+                        <div class="flex flex-wrap gap-1 mt-1">${productosHtml || '<span class="text-xs text-gray-400">Sin productos</span>'}</div>
+                    </div>
+                    
+                    <div>
+                        <p class="text-sm font-medium text-gray-700">Peso Total: <span class="font-bold">${cotizacion.peso_total} kg</span></p>
+                    </div>
+                    
+                    <div>
+                        <p class="text-sm font-medium text-gray-700">Tarifas Disponibles:</p>
+                        <div class="flex flex-wrap gap-1 mt-1">${tarifasHtml || '<span class="text-xs text-gray-400">Sin tarifas</span>'}</div>
+                    </div>
+                    
+                    <div class="text-xs text-gray-500 pt-2 border-t">
+                        Fecha: ${new Date(cotizacion.created_at).toLocaleString()}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    content.innerHTML = html;
+}
+
+// Función para eliminar cotización
+async function eliminarCotizacion(id) {
+    if (!confirm('¿Está seguro de eliminar esta cotización?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/historial-cotizaciones/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+        
+        if (response.ok) {
+            // Remover elemento del DOM
+            const elemento = document.getElementById(`cotizacion-${id}`);
+            if (elemento) {
+                elemento.remove();
+            }
+            
+            // Verificar si quedan elementos
+            const content = document.getElementById('historialContent');
+            const cotizaciones = content.querySelectorAll('[id^="cotizacion-"]');
+            if (cotizaciones.length === 0) {
+                content.innerHTML = '<p class="text-gray-500">No hay cotizaciones en el historial</p>';
+            }
+        } else {
+            alert('Error al eliminar la cotización');
+        }
+    } catch (e) {
+        console.error('Error:', e);
+        alert('Error de conexión al eliminar');
+    }
+}
 </script>
-<script src="//unpkg.com/alpinejs" defer></script>
+
 @endsection

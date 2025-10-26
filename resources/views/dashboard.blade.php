@@ -117,7 +117,7 @@
                                         </dt>
                                         <dd class="flex items-baseline">
                                             <div class="text-2xl font-semibold text-gray-900">
-                                                Envío
+                                                {{ App\Models\Cotizacion::count() }}
                                             </div>
                                         </dd>
                                     </dl>

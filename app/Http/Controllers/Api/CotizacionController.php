@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Services\AmplificaApiService;
+use App\Models\Cotizacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class CotizacionController extends Controller
 {
@@ -69,10 +71,28 @@ class CotizacionController extends Controller
                 'productos_count' => count($validated['productos'])
             ]);
 
+            $pesoTotal = collect($validated['productos'])->sum(function ($product) {
+                return $product['weight'] * $product['quantity'];
+            });
+
             $rate = $this->amplificaService->getRate(
                 $validated['productos'],
                 $validated['comuna']
             );
+
+            // Guardar cotización en historial
+            if (Auth::check()) {
+                Cotizacion::create([
+                    'user_id' => Auth::id(),
+                    'region_origen' => $request->input('region_origen', 'No especificada'),
+                    'comuna_origen' => $request->input('comuna_origen', 'No especificada'),
+                    'region_destino' => $request->input('region_destino', 'No especificada'),
+                    'comuna_destino' => $validated['comuna'],
+                    'peso_total' => $pesoTotal,
+                    'productos' => $validated['productos'],
+                    'tarifas' => $rate
+                ]);
+            }
 
             return response()->json($rate);
             
