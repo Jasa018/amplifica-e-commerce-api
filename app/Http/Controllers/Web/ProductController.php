@@ -14,7 +14,7 @@ class ProductController extends Controller
     }
     public function index()
     {
-        $products = Product::all();
+        $products = Product::with('orderDetails.order')->get();
         return view('products.index', compact('products'));
     }
 

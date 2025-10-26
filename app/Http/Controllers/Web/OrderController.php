@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\OrderDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -14,13 +17,15 @@ class OrderController extends Controller
     }
     public function index()
     {
-        $orders = Order::all();
+        // Eager-load orderDetails and their related products to build the products summary
+        $orders = Order::with('orderDetails.product')->get();
         return view('orders.index', compact('orders'));
     }
 
     public function create()
     {
-        return view('orders.create');
+        $products = Product::all();
+        return view('orders.create', compact('products'));
     }
 
     public function store(Request $request)
@@ -29,12 +34,37 @@ class OrderController extends Controller
             'cliente_nombre' => 'required|string|max:255',
             'fecha' => 'required|date',
             'total' => 'required|numeric',
+            'products' => 'required|array|min:1',
+            'products.*.product_id' => 'required|exists:products,id',
+            'products.*.quantity' => 'required|integer|min:1',
+            'products.*.unit_price' => 'required|numeric|min:0'
         ]);
 
-        Order::create($request->all());
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('orders.index')
-            ->with('success', 'Pedido creado exitosamente.');
+            $order = Order::create([
+                'cliente_nombre' => $request->cliente_nombre,
+                'fecha' => $request->fecha,
+                'total' => $request->total
+            ]);
+
+            foreach ($request->products as $product) {
+                OrderDetail::create([
+                    'order_id' => $order->id,
+                    'product_id' => $product['product_id'],
+                    'quantity' => $product['quantity'],
+                    'unit_price' => $product['unit_price']
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('orders.index')
+                ->with('success', 'Pedido creado exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Error al crear el pedido: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function show(Order $order)
@@ -44,7 +74,29 @@ class OrderController extends Controller
 
     public function edit(Order $order)
     {
-        return view('orders.edit', compact('order'));
+        $order->load('orderDetails.product');
+        $products = Product::all();
+        
+        // Formatear la fecha para el input type="date"
+        $order->fecha = date('Y-m-d', strtotime($order->fecha));
+        
+        // Asegurarnos de que los datos estén en el formato correcto y no sean nulos
+        $orderDetails = $order->orderDetails->map(function($detail) {
+            return [
+                'product_id' => (string)$detail->product_id,
+                'quantity' => (int)$detail->quantity,
+                'unit_price' => (float)$detail->unit_price
+            ];
+        })->values()->toArray(); // Usar values() para reindexar el array
+        
+        // Si no hay detalles, inicializar con un item vacío
+        if (empty($orderDetails)) {
+            $orderDetails = [
+                ['product_id' => '', 'quantity' => 1, 'unit_price' => 0]
+            ];
+        }
+        
+        return view('orders.edit', compact('order', 'products', 'orderDetails'));
     }
 
     public function update(Request $request, Order $order)
@@ -53,12 +105,41 @@ class OrderController extends Controller
             'cliente_nombre' => 'required|string|max:255',
             'fecha' => 'required|date',
             'total' => 'required|numeric',
+            'products' => 'required|array|min:1',
+            'products.*.product_id' => 'required|exists:products,id',
+            'products.*.quantity' => 'required|integer|min:1',
+            'products.*.unit_price' => 'required|numeric|min:0'
         ]);
 
-        $order->update($request->all());
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('orders.index')
-            ->with('success', 'Pedido actualizado exitosamente.');
+            $order->update([
+                'cliente_nombre' => $request->cliente_nombre,
+                'fecha' => $request->fecha,
+                'total' => $request->total
+            ]);
+
+            // Eliminar detalles existentes
+            $order->orderDetails()->delete();
+
+            // Crear nuevos detalles
+            foreach ($request->products as $product) {
+                OrderDetail::create([
+                    'order_id' => $order->id,
+                    'product_id' => $product['product_id'],
+                    'quantity' => $product['quantity'],
+                    'unit_price' => $product['unit_price']
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('orders.index')
+                ->with('success', 'Pedido actualizado exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Error al actualizar el pedido: ' . $e->getMessage())->withInput();
+        }
     }
 
     public function destroy(Order $order)

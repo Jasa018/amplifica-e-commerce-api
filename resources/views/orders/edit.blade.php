@@ -1,90 +1,124 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Pedido</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            margin: 0;
-            padding: 2rem;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #33533a; /* Color 1 */
-        }
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #456547; /* Color 2 */
-        }
-        .form-group input {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .btn {
-            display: inline-block;
-            background-color: #65865d; /* Color 3 */
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 1rem;
-        }
-        .btn:hover {
-            background-color: #456547; /* Color 2 */
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Editar Pedido</h1>
+@extends('layouts.app')
 
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+@section('title', 'Editar Pedido')
 
-        <form action="{{ route('orders.update', $order->id) }}" method="POST">
-            @csrf
-            @method('PUT')
-            <div class="form-group">
-                <label for="cliente_nombre">Cliente</label>
-                <input type="text" id="cliente_nombre" name="cliente_nombre" value="{{ old('cliente_nombre', $order->cliente_nombre) }}" required>
-            </div>
-            <div class="form-group">
-                <label for="fecha">Fecha</label>
-                <input type="date" id="fecha" name="fecha" value="{{ old('fecha', $order->fecha) }}" required>
-            </div>
-            <div class="form-group">
-                <label for="total">Total</label>
-                <input type="number" id="total" name="total" step="0.01" value="{{ old('total', $order->total) }}" required>
-            </div>
-            <button type="submit" class="btn">Actualizar Pedido</button>
-        </form>
+@section('content')
+<div class="bg-white shadow rounded-lg overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-2xl font-bold text-gray-800">Editar Pedido</h2>
     </div>
-</body>
-</html>
+
+    @if ($errors->any())
+        <div class="p-4 mb-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            <ul class="list-disc pl-5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <form action="{{ route('orders.update', $order->id) }}" method="POST" class="p-6" x-data="orderForm()" x-init="initializeForm()">
+        @csrf
+        @method('PUT')
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-4">
+                <div>
+                    <label for="cliente_nombre" class="block text-sm font-medium text-gray-700">Cliente</label>
+                    <input type="text" id="cliente_nombre" name="cliente_nombre" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('cliente_nombre', $order->cliente_nombre) }}">
+                </div>
+                <div>
+                    <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha</label>
+                    <input type="date" id="fecha" name="fecha" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('fecha', $order->fecha) }}">
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Productos del Pedido</h3>
+                <template x-for="(item, index) in items" :key="index">
+                    <div class="grid grid-cols-12 gap-2 mb-3">
+                        <div class="col-span-5">
+                            <select :name="'products['+index+'][product_id]'" required class="block w-full rounded-md border-gray-300 shadow-sm" x-model="item.product_id" @change="updatePrice(index)">
+                                <option value="">Seleccionar Producto</option>
+                                @foreach($products as $product)
+                                    <option value="{{ $product->id }}" data-price="{{ $product->price }}" :selected="item.product_id == {{ $product->id }}">{{ $product->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-span-3">
+                            <input type="number" :name="'products['+index+'][quantity]'" class="block w-full rounded-md border-gray-300 shadow-sm" placeholder="Cantidad" min="1" required x-model="item.quantity" @input="calculateTotal()">
+                        </div>
+                        <div class="col-span-3">
+                            <input type="number" :name="'products['+index+'][unit_price]'" class="block w-full rounded-md border-gray-300 shadow-sm" placeholder="Precio" step="0.01" required readonly x-model="item.unit_price">
+                        </div>
+                        <div class="col-span-1">
+                            <button type="button" @click="removeItem(index)" class="text-red-600 hover:text-red-800">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                </template>
+
+                <button type="button" @click="addItem" class="mt-2 w-full px-4 py-2 bg-green-600 text-white rounded-md">Agregar Producto</button>
+            </div>
+        </div>
+
+        <div class="mt-6 border-t border-gray-200 pt-4">
+            <div class="flex justify-between items-center">
+                <div class="text-xl font-semibold text-gray-900">Total: $<span x-text="total.toFixed(2)"></span>
+                    <input type="hidden" name="total" x-model="total">
+                </div>
+                <div class="space-x-3">
+                    <a href="{{ route('orders.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-md">Cancelar</a>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md">Actualizar Pedido</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+const orderDetails = {!! json_encode($orderDetails) !!};
+
+window.orderForm = function() {
+    return {
+        items: orderDetails.length ? orderDetails : [{ product_id: '', quantity: 1, unit_price: 0 }],
+        total: 0,
+        initializeForm() {
+            // Inicializar los precios y calcular el total
+            this.$nextTick(() => {
+                this.items.forEach((_, index) => {
+                    this.updatePrice(index);
+                });
+                this.calculateTotal();
+            });
+        },
+        addItem() { 
+            this.items.push({ product_id: '', quantity: 1, unit_price: 0 }); 
+            this.calculateTotal(); 
+        },
+        removeItem(index) { 
+            if (this.items.length > 1) { 
+                this.items.splice(index, 1); 
+                this.calculateTotal(); 
+            } 
+        },
+        updatePrice(index) {
+            const select = document.querySelector(`select[name="products[${index}][product_id]"]`);
+            const selectedOption = select ? select.querySelector(`option[value="${this.items[index].product_id}"]`) : null;
+            if (selectedOption) {
+                this.items[index].unit_price = parseFloat(selectedOption.dataset.price) || 0;
+                this.calculateTotal();
+            }
+        },
+        calculateTotal() { 
+            this.total = this.items.reduce((sum, item) => {
+                return sum + ((parseFloat(item.unit_price) || 0) * (parseInt(item.quantity) || 0));
+            }, 0); 
+        }
+    }
+}
+</script>
+<script src="//unpkg.com/alpinejs" defer></script>
+@endsection

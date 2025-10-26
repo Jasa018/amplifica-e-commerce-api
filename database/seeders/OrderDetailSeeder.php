@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 use App\Models\OrderDetail;
 use App\Models\Order;
 use App\Models\Product;
+use Illuminate\Support\Facades\DB;
 
 class OrderDetailSeeder extends Seeder
 {
@@ -33,6 +34,12 @@ class OrderDetailSeeder extends Seeder
                     'unit_price' => $product->price,
                 ]);
             }
+        }
+
+        // Recalculate and update each order total based on its order details
+        foreach ($orders as $order) {
+            $total = $order->orderDetails()->sum(DB::raw('quantity * unit_price'));
+            $order->update(['total' => $total]);
         }
     }
 }

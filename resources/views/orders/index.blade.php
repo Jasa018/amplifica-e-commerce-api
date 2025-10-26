@@ -28,6 +28,7 @@
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Productos</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
                 </thead>
@@ -38,6 +39,21 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $order->cliente_nombre }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $order->fecha }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ number_format($order->total, 2) }}</td>
+                            <td class="px-6 py-4 align-top text-sm text-gray-900">
+                                {{-- Products summary: vertical list with quantities, wrap down if long --}}
+                                @if($order->orderDetails->isNotEmpty())
+                                    <div class="max-w-xs break-words">
+                                        @foreach($order->orderDetails as $detail)
+                                            <div class="flex items-baseline">
+                                                <span class="mr-2 text-sm text-gray-900">{{ $detail->product->name }}</span>
+                                                <span class="text-xs text-gray-500">x{{ $detail->quantity }}</span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    -
+                                @endif
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                 <a href="{{ route('orders.show', $order->id) }}" 
                                    class="text-blue-600 hover:text-blue-900 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-full transition duration-200">Ver</a>
