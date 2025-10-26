@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -15,26 +16,47 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+        try {
+            $credentials = $request->validate([
+                'email' => ['required', 'email', 'max:255'],
+                'password' => ['required', 'min:3', 'max:255'],
+            ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
-            return redirect()->intended('/dashboard');
+            if (Auth::attempt($credentials)) {
+                $request->session()->regenerate();
+                Log::info('User logged in', ['email' => $credentials['email']]);
+                return redirect()->intended('/dashboard');
+            }
+
+            Log::warning('Failed login attempt', ['email' => $credentials['email']]);
+            return back()->withErrors([
+                'email' => 'Las credenciales proporcionadas no coinciden con nuestros registros.',
+            ])->onlyInput('email');
+            
+        } catch (\Exception $e) {
+            Log::error('Login error', ['error' => $e->getMessage()]);
+            return back()->withErrors([
+                'email' => 'Error en el sistema. Intente nuevamente.',
+            ]);
         }
-
-        return back()->withErrors([
-            'email' => 'Las credenciales proporcionadas no coinciden con nuestros registros.',
-        ])->onlyInput('email');
     }
 
     public function logout(Request $request)
     {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return redirect('/');
+        try {
+            $user = Auth::user();
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+            
+            if ($user) {
+                Log::info('User logged out', ['email' => $user->email]);
+            }
+            
+            return redirect('/');
+        } catch (\Exception $e) {
+            Log::error('Logout error', ['error' => $e->getMessage()]);
+            return redirect('/');
+        }
     }
 }

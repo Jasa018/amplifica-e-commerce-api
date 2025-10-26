@@ -7,12 +7,19 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class OrderDetailController extends Controller
 {
     public function index()
     {
-        return response()->json(OrderDetail::with(['order', 'product'])->get());
+        try {
+            $orderDetails = OrderDetail::with(['order', 'product'])->get();
+            return response()->json($orderDetails);
+        } catch (\Exception $e) {
+            Log::error('API order details index error', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Error al obtener detalles de pedidos'], 500);
+        }
     }
 
     public function create()
@@ -24,16 +31,27 @@ class OrderDetailController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
-            'unit_price' => 'required|numeric|min:0',
-        ]);
+        try {
+            $validated = $request->validate([
+                'order_id' => 'required|exists:orders,id',
+                'product_id' => 'required|exists:products,id',
+                'quantity' => 'required|integer|min:1|max:1000',
+                'unit_price' => 'required|numeric|min:0|max:999999.99',
+            ]);
 
-        $orderDetail = OrderDetail::create($request->all());
+            $orderDetail = OrderDetail::create($validated);
+            Log::info('API order detail created', ['order_detail_id' => $orderDetail->id]);
 
-        return response()->json($orderDetail, 201);
+            return response()->json($orderDetail, 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Datos de validación incorrectos',
+                'details' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('API order detail creation error', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Error al crear detalle de pedido'], 500);
+        }
     }
 
     public function show(OrderDetail $orderDetail)
@@ -51,22 +69,40 @@ class OrderDetailController extends Controller
 
     public function update(Request $request, OrderDetail $orderDetail)
     {
-        $request->validate([
-            'order_id' => 'sometimes|required|exists:orders,id',
-            'product_id' => 'sometimes|required|exists:products,id',
-            'quantity' => 'sometimes|required|integer|min:1',
-            'unit_price' => 'sometimes|required|numeric|min:0',
-        ]);
+        try {
+            $validated = $request->validate([
+                'order_id' => 'sometimes|required|exists:orders,id',
+                'product_id' => 'sometimes|required|exists:products,id',
+                'quantity' => 'sometimes|required|integer|min:1|max:1000',
+                'unit_price' => 'sometimes|required|numeric|min:0|max:999999.99',
+            ]);
 
-        $orderDetail->update($request->all());
+            $orderDetail->update($validated);
+            Log::info('API order detail updated', ['order_detail_id' => $orderDetail->id]);
 
-        return response()->json($orderDetail);
+            return response()->json($orderDetail);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Datos de validación incorrectos',
+                'details' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('API order detail update error', ['error' => $e->getMessage(), 'order_detail_id' => $orderDetail->id]);
+            return response()->json(['error' => 'Error al actualizar detalle de pedido'], 500);
+        }
     }
 
     public function destroy(OrderDetail $orderDetail)
     {
-        $orderDetail->delete();
+        try {
+            $orderDetailId = $orderDetail->id;
+            $orderDetail->delete();
+            Log::info('API order detail deleted', ['order_detail_id' => $orderDetailId]);
 
-        return response()->json(['message' => 'Detalle de orden eliminado exitosamente'], 200);
+            return response()->json(['message' => 'Detalle de orden eliminado exitosamente'], 200);
+        } catch (\Exception $e) {
+            Log::error('API order detail deletion error', ['error' => $e->getMessage(), 'order_detail_id' => $orderDetail->id]);
+            return response()->json(['error' => 'Error al eliminar detalle de pedido'], 500);
+        }
     }
 }

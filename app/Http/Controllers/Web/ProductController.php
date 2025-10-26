@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -14,8 +15,14 @@ class ProductController extends Controller
     }
     public function index()
     {
-        $products = Product::with('orderDetails.order')->get();
-        return view('products.index', compact('products'));
+        try {
+            $products = Product::with('orderDetails.order')->get();
+            return view('products.index', compact('products'));
+        } catch (\Exception $e) {
+            Log::error('Error loading products', ['error' => $e->getMessage()]);
+            return view('products.index', ['products' => collect()])
+                ->with('error', 'Error al cargar productos');
+        }
     }
 
     public function create()
@@ -25,19 +32,25 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'weight' => 'required|numeric|min:0',
-            'width' => 'required|numeric|min:0',
-            'height' => 'required|numeric|min:0',
-            'length' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255|unique:products,name',
+                'price' => 'required|numeric|min:0|max:999999.99',
+                'weight' => 'required|numeric|min:0.01|max:1000',
+                'width' => 'required|numeric|min:0.01|max:1000',
+                'height' => 'required|numeric|min:0.01|max:1000',
+                'length' => 'required|numeric|min:0.01|max:1000',
+                'stock' => 'required|integer|min:0|max:999999',
+            ]);
 
-        Product::create($validatedData);
+            $product = Product::create($validatedData);
+            Log::info('Product created', ['product_id' => $product->id, 'name' => $product->name]);
 
-        return redirect()->route('products.index')->with('success', 'Producto creado exitosamente.');
+            return redirect()->route('products.index')->with('success', 'Producto creado exitosamente.');
+        } catch (\Exception $e) {
+            Log::error('Error creating product', ['error' => $e->getMessage(), 'data' => $request->all()]);
+            return back()->withInput()->with('error', 'Error al crear producto: ' . $e->getMessage());
+        }
     }
 
     public function show(Product $product)
@@ -52,25 +65,38 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'weight' => 'required|numeric|min:0',
-            'width' => 'required|numeric|min:0',
-            'height' => 'required|numeric|min:0',
-            'length' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255|unique:products,name,' . $product->id,
+                'price' => 'required|numeric|min:0|max:999999.99',
+                'weight' => 'required|numeric|min:0.01|max:1000',
+                'width' => 'required|numeric|min:0.01|max:1000',
+                'height' => 'required|numeric|min:0.01|max:1000',
+                'length' => 'required|numeric|min:0.01|max:1000',
+                'stock' => 'required|integer|min:0|max:999999',
+            ]);
 
-        $product->update($validatedData);
+            $product->update($validatedData);
+            Log::info('Product updated', ['product_id' => $product->id, 'name' => $product->name]);
 
-        return redirect()->route('products.index')->with('success', 'Producto actualizado exitosamente.');
+            return redirect()->route('products.index')->with('success', 'Producto actualizado exitosamente.');
+        } catch (\Exception $e) {
+            Log::error('Error updating product', ['error' => $e->getMessage(), 'product_id' => $product->id]);
+            return back()->withInput()->with('error', 'Error al actualizar producto: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Product $product)
     {
-        $product->delete();
+        try {
+            $productName = $product->name;
+            $product->delete();
+            Log::info('Product deleted', ['product_name' => $productName]);
 
-        return redirect()->route('products.index')->with('success', 'Producto eliminado exitosamente.');
+            return redirect()->route('products.index')->with('success', 'Producto eliminado exitosamente.');
+        } catch (\Exception $e) {
+            Log::error('Error deleting product', ['error' => $e->getMessage(), 'product_id' => $product->id]);
+            return back()->with('error', 'Error al eliminar producto: ' . $e->getMessage());
+        }
     }
 }

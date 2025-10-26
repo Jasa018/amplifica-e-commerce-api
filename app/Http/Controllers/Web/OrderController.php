@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\OrderDetail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
@@ -17,9 +18,14 @@ class OrderController extends Controller
     }
     public function index()
     {
-        // Eager-load orderDetails and their related products to build the products summary
-        $orders = Order::with('orderDetails.product')->get();
-        return view('orders.index', compact('orders'));
+        try {
+            $orders = Order::with('orderDetails.product')->get();
+            return view('orders.index', compact('orders'));
+        } catch (\Exception $e) {
+            Log::error('Error loading orders', ['error' => $e->getMessage()]);
+            return view('orders.index', ['orders' => collect()])
+                ->with('error', 'Error al cargar pedidos');
+        }
     }
 
     public function create()
@@ -59,10 +65,12 @@ class OrderController extends Controller
             }
 
             DB::commit();
+            Log::info('Order created', ['order_id' => $order->id, 'cliente' => $order->cliente_nombre]);
             return redirect()->route('orders.index')
                 ->with('success', 'Pedido creado exitosamente.');
         } catch (\Exception $e) {
             DB::rollback();
+            Log::error('Error creating order', ['error' => $e->getMessage(), 'data' => $request->all()]);
             return back()->with('error', 'Error al crear el pedido: ' . $e->getMessage())->withInput();
         }
     }
@@ -134,19 +142,28 @@ class OrderController extends Controller
             }
 
             DB::commit();
+            Log::info('Order updated', ['order_id' => $order->id, 'cliente' => $order->cliente_nombre]);
             return redirect()->route('orders.index')
                 ->with('success', 'Pedido actualizado exitosamente.');
         } catch (\Exception $e) {
             DB::rollback();
+            Log::error('Error updating order', ['error' => $e->getMessage(), 'order_id' => $order->id]);
             return back()->with('error', 'Error al actualizar el pedido: ' . $e->getMessage())->withInput();
         }
     }
 
     public function destroy(Order $order)
     {
-        $order->delete();
+        try {
+            $orderInfo = ['id' => $order->id, 'cliente' => $order->cliente_nombre];
+            $order->delete();
+            Log::info('Order deleted', $orderInfo);
 
-        return redirect()->route('orders.index')
-            ->with('success', 'Pedido eliminado exitosamente.');
+            return redirect()->route('orders.index')
+                ->with('success', 'Pedido eliminado exitosamente.');
+        } catch (\Exception $e) {
+            Log::error('Error deleting order', ['error' => $e->getMessage(), 'order_id' => $order->id]);
+            return back()->with('error', 'Error al eliminar pedido: ' . $e->getMessage());
+        }
     }
 }
