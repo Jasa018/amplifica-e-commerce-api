@@ -180,4 +180,15 @@ class AmplificaApiService
             throw new \Exception('Error en solicitud a API Amplifica: ' . $e->getMessage());
         }
     }
+
+    public function cotizar(array $data): array
+    {
+        try {
+            return $this->makeAuthenticatedRequest('post', '/cotizar', $data);
+        } catch (ConnectionException $e) {
+            throw new \Exception('Error de conexión con API Amplifica: ' . $e->getMessage());
+        } catch (RequestException $e) {
+            throw new \Exception('Error en solicitud a API Amplifica: ' . $e->getMessage());
+        }
+    }
 }

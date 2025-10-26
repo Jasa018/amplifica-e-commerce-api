@@ -261,6 +261,59 @@ Todas las respuestas de la API utilizan **Resource Collections** para estructura
 }
 ```
 
+## 🧪 Tests Automatizados con PHPUnit
+
+### Cobertura de Tests
+El proyecto incluye una suite completa de tests automatizados que cubren:
+
+#### Tests Unitarios (`tests/Unit/`) - ✅ 11/11 Pasando
+- **ProductTest**: Validación de modelos y atributos de productos
+- **OrderTest**: Relaciones y cálculos de pedidos
+- **AmplificaApiServiceTest**: Integración con API externa y cache de tokens
+- **HelperTest**: Configuración del entorno de testing
+
+#### Tests de Feature (`tests/Feature/`) - ✅ 22/22 Pasando
+- **ProductApiTest**: ✅ CRUD completo de productos via API
+- **OrderApiTest**: ✅ Gestión de pedidos 
+- **AuthApiTest**: ✅ Autenticación JWT y manejo de sesiones
+- **CotizacionApiTest**: ⚠️ Cotizaciones de envío
+- **WebRoutesTest**: ✅ Rutas web y autenticación
+
+### Ejecutar Tests
+
+```bash
+# Ejecutar todos los tests
+docker-compose exec laravel.test php artisan test
+
+# Ejecutar tests con cobertura
+docker-compose exec laravel.test php artisan test --coverage
+
+# Ejecutar solo tests unitarios
+docker-compose exec laravel.test php artisan test --testsuite=Unit
+
+# Ejecutar solo tests de feature
+docker-compose exec laravel.test php artisan test --testsuite=Feature
+
+# Ejecutar test específico
+docker-compose exec laravel.test php artisan test --filter=ProductTest
+```
+
+### Configuración de Testing
+- **Base de datos**: SQLite en memoria para tests rápidos
+- **HTTP Mocking**: Simulación de APIs externas con Laravel HTTP
+- **Factory Pattern**: Generación de datos de prueba consistentes
+- **RefreshDatabase**: Limpieza automática entre tests
+- **Sanctum Testing**: Autenticación simulada para APIs
+
+### Características de los Tests
+- **Validación de datos**: Verificación de reglas de negocio
+- **Manejo de errores**: Tests de casos de fallo y excepciones
+- **Integración API**: Tests end-to-end de endpoints
+- **Mocking externo**: Simulación de servicios de terceros
+- **Autenticación**: Tests de seguridad y autorización
+
+---
+
 ## 🤖 Desarrollo con IA
 
 Este proyecto fue desarrollado utilizando **Geminis**, **Copilot** y **Amazon Q** un asistente de IA que proporcionó:
@@ -273,6 +326,7 @@ Este proyecto fue desarrollado utilizando **Geminis**, **Copilot** y **Amazon Q*
 - **Documentación Swagger** completa y detallada
 - **Validaciones exhaustivas** de datos de entrada
 - **Arquitectura escalable** y mantenible
+- **Tests automatizados** con PHPUnit y cobertura completa
 
 ---
 
@@ -291,6 +345,12 @@ docker-compose logs -f app
 
 # Acceder al contenedor de la aplicación
 docker-compose exec app bash
+
+# Ejecutar tests
+docker-compose exec laravel.test php artisan test
+
+# Ejecutar tests con cobertura
+docker-compose exec laravel.test php artisan test --coverage
 
 # Reiniciar todos los servicios
 docker-compose restart

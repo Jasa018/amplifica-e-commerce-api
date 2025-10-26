@@ -2,15 +2,20 @@
 
 namespace Tests\Unit;
 
-use PHPUnit\Framework\TestCase;
+use Tests\TestCase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-class ExampleTest extends TestCase
+class HelperTest extends TestCase
 {
-    /**
-     * A basic test example.
-     */
-    public function test_that_true_is_true(): void
+    use RefreshDatabase;
+
+    public function test_application_environment_is_testing()
     {
-        $this->assertTrue(true);
+        $this->assertEquals('testing', app()->environment());
+    }
+
+    public function test_database_connection_works()
+    {
+        $this->assertDatabaseCount('users', 0);
     }
 }
