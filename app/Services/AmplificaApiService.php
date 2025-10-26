@@ -28,10 +28,29 @@ class AmplificaApiService
 
     private function requestNewToken(): string
     {
+        $startTime = microtime(true);
+        $requestData = ['username' => 'joaquin.alamiro@ejemplo.com', 'password' => '[HIDDEN]'];
+        
+        Log::info('API Request - Token Authentication', [
+            'endpoint' => '/auth',
+            'method' => 'POST',
+            'request_data' => $requestData
+        ]);
+        
         try {
             $response = Http::timeout(30)->post($this->baseUrl . '/auth', [
                 'username' => 'joaquin.alamiro@ejemplo.com',
                 'password' => '12345'
+            ]);
+            
+            $duration = round((microtime(true) - $startTime) * 1000, 2);
+            
+            Log::info('API Response - Token Authentication', [
+                'endpoint' => '/auth',
+                'method' => 'POST',
+                'status_code' => $response->status(),
+                'duration_ms' => $duration,
+                'success' => $response->successful()
             ]);
 
             if (!$response->successful()) {
@@ -41,12 +60,27 @@ class AmplificaApiService
 
             $token = $response->json('token');
             if (!$token) {
+                Log::error('API Error - Token not received', [
+                    'endpoint' => '/auth',
+                    'response_body' => $response->body()
+                ]);
                 throw new \Exception('Token no recibido en la respuesta de autenticación');
             }
+            
+            Log::info('API Success - Token obtained successfully', [
+                'endpoint' => '/auth',
+                'token_length' => strlen($token)
+            ]);
 
             return $token;
         } catch (ConnectionException $e) {
-            Log::error('Connection error getting token', ['error' => $e->getMessage()]);
+            $duration = round((microtime(true) - $startTime) * 1000, 2);
+            Log::error('API Connection Error - Token Authentication', [
+                'endpoint' => '/auth',
+                'method' => 'POST',
+                'duration_ms' => $duration,
+                'error' => $e->getMessage()
+            ]);
             throw new \Exception('Error de conexión al obtener token: Verifique su conexión a internet');
         }
     }
@@ -55,15 +89,39 @@ class AmplificaApiService
     {
         $maxRetries = 2;
         $attempt = 0;
+        $startTime = microtime(true);
+        
+        Log::info('API Request - Authenticated', [
+            'endpoint' => $endpoint,
+            'method' => strtoupper($method),
+            'request_data' => $data,
+            'attempt' => $attempt + 1,
+            'max_retries' => $maxRetries
+        ]);
         
         while ($attempt < $maxRetries) {
             try {
                 $token = $this->getToken();
                 $response = Http::timeout(30)->withToken($token)->{$method}($this->baseUrl . $endpoint, $data);
                 
+                $duration = round((microtime(true) - $startTime) * 1000, 2);
+                
+                Log::info('API Response - Authenticated', [
+                    'endpoint' => $endpoint,
+                    'method' => strtoupper($method),
+                    'status_code' => $response->status(),
+                    'duration_ms' => $duration,
+                    'attempt' => $attempt + 1,
+                    'success' => $response->successful()
+                ]);
+                
                 // Si el token expiró (401), renovar y reintentar
                 if ($response->status() === 401 && $attempt === 0) {
-                    Log::info('Token expired, refreshing...');
+                    Log::warning('API Token Expired - Refreshing', [
+                        'endpoint' => $endpoint,
+                        'method' => strtoupper($method),
+                        'attempt' => $attempt + 1
+                    ]);
                     Cache::forget('amplifica_token');
                     $attempt++;
                     continue;
@@ -74,17 +132,35 @@ class AmplificaApiService
                     $this->handleApiError($response);
                 }
                 
-                return $response->json() ?? [];
+                $responseData = $response->json() ?? [];
+                
+                Log::info('API Success - Request completed', [
+                    'endpoint' => $endpoint,
+                    'method' => strtoupper($method),
+                    'response_size' => strlen($response->body()),
+                    'duration_ms' => $duration
+                ]);
+                
+                return $responseData;
                 
             } catch (ConnectionException $e) {
-                Log::error('Connection error in API request', [
-                    'method' => $method,
+                $duration = round((microtime(true) - $startTime) * 1000, 2);
+                Log::error('API Connection Error - Authenticated Request', [
                     'endpoint' => $endpoint,
+                    'method' => strtoupper($method),
+                    'duration_ms' => $duration,
+                    'attempt' => $attempt + 1,
                     'error' => $e->getMessage()
                 ]);
                 throw new \Exception('Error de conexión con la API: Verifique su conexión a internet');
             }
         }
+        
+        Log::error('API Error - Max retries exceeded', [
+            'endpoint' => $endpoint,
+            'method' => strtoupper($method),
+            'max_retries' => $maxRetries
+        ]);
         
         throw new \Exception('Error de autenticación: No se pudo renovar el token');
     }
@@ -118,10 +194,12 @@ class AmplificaApiService
     
     private function logError(string $message, Response $response): void
     {
-        Log::error($message, [
-            'status' => $response->status(),
-            'body' => $response->body(),
-            'headers' => $response->headers()
+        Log::error('API Error - ' . $message, [
+            'status_code' => $response->status(),
+            'response_body' => $response->body(),
+            'response_headers' => $response->headers(),
+            'content_type' => $response->header('Content-Type'),
+            'response_size' => strlen($response->body())
         ]);
     }
 
@@ -135,23 +213,72 @@ class AmplificaApiService
      */
     public function getTokenWithCredentials(string $email, string $password): string
     {
+        $startTime = microtime(true);
+        
+        Log::info('API Request - Custom Credentials Auth', [
+            'endpoint' => '/auth',
+            'method' => 'POST',
+            'username' => $email
+        ]);
+        
         try {
             $response = Http::post($this->baseUrl . '/auth', [
                 'username' => $email,
                 'password' => $password,
             ]);
+            
+            $duration = round((microtime(true) - $startTime) * 1000, 2);
+            
+            Log::info('API Response - Custom Credentials Auth', [
+                'endpoint' => '/auth',
+                'method' => 'POST',
+                'status_code' => $response->status(),
+                'duration_ms' => $duration,
+                'success' => $response->successful(),
+                'username' => $email
+            ]);
 
             if ($response->successful()) {
-                return $response->json('token');
+                $token = $response->json('token');
+                Log::info('API Success - Custom token obtained', [
+                    'endpoint' => '/auth',
+                    'username' => $email,
+                    'token_length' => strlen($token)
+                ]);
+                return $token;
             }
 
             // If API returned an error status, throw with body message when available
             $body = $response->json();
             $message = is_array($body) && isset($body['message']) ? $body['message'] : $response->body();
+            
+            Log::error('API Error - Custom Credentials Auth Failed', [
+                'endpoint' => '/auth',
+                'username' => $email,
+                'status_code' => $response->status(),
+                'error_message' => $message
+            ]);
+            
             throw new \Exception('Amplifica auth error: ' . $message);
         } catch (ConnectionException $e) {
+            $duration = round((microtime(true) - $startTime) * 1000, 2);
+            Log::error('API Connection Error - Custom Credentials Auth', [
+                'endpoint' => '/auth',
+                'method' => 'POST',
+                'duration_ms' => $duration,
+                'username' => $email,
+                'error' => $e->getMessage()
+            ]);
             throw new \Exception('Error de conexión con API Amplifica: ' . $e->getMessage());
         } catch (RequestException $e) {
+            $duration = round((microtime(true) - $startTime) * 1000, 2);
+            Log::error('API Request Error - Custom Credentials Auth', [
+                'endpoint' => '/auth',
+                'method' => 'POST',
+                'duration_ms' => $duration,
+                'username' => $email,
+                'error' => $e->getMessage()
+            ]);
             throw new \Exception('Error en solicitud a API Amplifica: ' . $e->getMessage());
         }
     }

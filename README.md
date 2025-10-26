@@ -180,6 +180,7 @@ El dashboard muestra un resumen del sistema con:
 - **Manejo específico** por tipo de error (conexión, validación, autenticación)
 - **Respuestas consistentes** con códigos HTTP apropiados
 - **Reintentos automáticos** para errores de token expirado
+- **Logs estructurados de API externa** con métricas de rendimiento
 
 ---
 
@@ -208,6 +209,7 @@ El dashboard muestra un resumen del sistema con:
 - **Cache de tokens** con renovación automática
 - **Documentación interactiva** con Swagger UI
 - **Resource Collections** para estructurar respuestas de API
+- **Logs estructurados de API externa** con métricas detalladas
 
 ---
 
@@ -255,6 +257,57 @@ DELETE /api/historial-cotizaciones/{id}
   "created_at": "2024-01-01 12:00:00"
 }
 ```
+
+---
+
+## 📈 Logs Estructurados de API Externa
+
+### Implementación de Logging
+El sistema implementa logs estructurados completos para todas las peticiones a la API externa de Amplifica:
+
+#### Información Registrada
+- **Request Logs**: Método HTTP, endpoint, datos de solicitud, intentos
+- **Response Logs**: Código de estado, duración en milisegundos, tamaño de respuesta
+- **Error Logs**: Detalles de errores de conexión, autenticación y validación
+- **Performance Metrics**: Tiempo de respuesta, reintentos, tamaño de datos
+
+#### Tipos de Logs Generados
+```bash
+# Logs de autenticación
+[INFO] API Request - Token Authentication
+[INFO] API Response - Token Authentication
+[INFO] API Success - Token obtained successfully
+
+# Logs de peticiones autenticadas
+[INFO] API Request - Authenticated
+[INFO] API Response - Authenticated
+[WARNING] API Token Expired - Refreshing
+[INFO] API Success - Request completed
+
+# Logs de errores
+[ERROR] API Connection Error - Authenticated Request
+[ERROR] API Error - Max retries exceeded
+[ERROR] API Error - Custom Credentials Auth Failed
+```
+
+#### Estructura de Logs
+```json
+{
+  "endpoint": "/cotizar",
+  "method": "POST",
+  "status_code": 200,
+  "duration_ms": 1250.75,
+  "attempt": 1,
+  "success": true,
+  "response_size": 2048,
+  "request_data": {...}
+}
+```
+
+#### Ubicación de Logs
+- **Archivo**: `storage/logs/laravel.log`
+- **Formato**: JSON estructurado con contexto completo
+- **Rotación**: Automática según configuración de Laravel
 
 ---
 
