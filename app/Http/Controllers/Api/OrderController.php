@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Http\Resources\OrderResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -21,8 +22,8 @@ class OrderController extends Controller
     public function index()
     {
         try {
-            $orders = Order::all();
-            return response()->json($orders);
+            $orders = Order::with('orderDetails.product')->get();
+            return OrderResource::collection($orders);
         } catch (\Exception $e) {
             Log::error('API orders index error', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Error al obtener pedidos'], 500);
@@ -59,7 +60,7 @@ class OrderController extends Controller
             $order = Order::create($validated);
             Log::info('API order created', ['order_id' => $order->id]);
 
-            return response()->json($order, 201);
+            return new OrderResource($order);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'error' => 'Datos de validación incorrectos',
@@ -84,7 +85,8 @@ class OrderController extends Controller
     public function show(Order $order)
     {
         try {
-            return response()->json($order);
+            $order->load('orderDetails.product');
+            return new OrderResource($order);
         } catch (\Exception $e) {
             Log::error('API order show error', ['error' => $e->getMessage(), 'order_id' => $order->id]);
             return response()->json(['error' => 'Error al obtener pedido'], 500);
@@ -111,9 +113,10 @@ class OrderController extends Controller
             ]);
 
             $order->update($validated);
+            $order->load('orderDetails.product');
             Log::info('API order updated', ['order_id' => $order->id]);
 
-            return response()->json($order);
+            return new OrderResource($order);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'error' => 'Datos de validación incorrectos',

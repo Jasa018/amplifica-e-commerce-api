@@ -202,8 +202,64 @@ El dashboard muestra un resumen del sistema con:
 - **Transacciones de base de datos** para operaciones críticas
 - **Cache de tokens** con renovación automática
 - **Documentación interactiva** con Swagger UI
+- **Resource Collections** para estructurar respuestas de API
 
 ---
+
+## 📊 Resource Collections y Transformadores
+
+### Estructura de Respuestas API
+Todas las respuestas de la API utilizan **Resource Collections** para estructurar y transformar los datos:
+
+#### ProductResource
+```json
+{
+  "id": 1,
+  "name": "Producto ejemplo",
+  "price": 99.99,
+  "weight": 1.5,
+  "dimensions": {
+    "width": 10,
+    "height": 5,
+    "length": 15
+  },
+  "stock": 100,
+  "created_at": "2024-01-01 12:00:00",
+  "updated_at": "2024-01-01 12:00:00"
+}
+```
+
+#### ProductCollection (con metadatos)
+```json
+{
+  "data": [...],
+  "meta": {
+    "total_products": 50,
+    "total_stock": 2500,
+    "average_price": 75.50
+  }
+}
+```
+
+#### OrderResource (con relaciones)
+```json
+{
+  "id": 1,
+  "cliente_nombre": "Juan Pérez",
+  "fecha": "2024-01-01",
+  "total": 199.98,
+  "order_details": [
+    {
+      "id": 1,
+      "quantity": 2,
+      "unit_price": 99.99,
+      "subtotal": 199.98,
+      "product": {...}
+    }
+  ],
+  "created_at": "2024-01-01 12:00:00"
+}
+```
 
 ## 🤖 Desarrollo con IA
 

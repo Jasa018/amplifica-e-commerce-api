@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Http\Resources\UserResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -58,7 +59,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'token' => $token,
-                'user' => $user
+                'user' => new UserResource($user)
             ]);
         } catch (ValidationException $e) {
             throw $e;
@@ -119,7 +120,7 @@ class AuthController extends Controller
     public function user(Request $request)
     {
         try {
-            return response()->json($request->user());
+            return new UserResource($request->user());
         } catch (\Exception $e) {
             Log::error('API user info error', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Error al obtener información del usuario'], 500);

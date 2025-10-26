@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
+use App\Http\Resources\OrderDetailResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -24,7 +25,7 @@ class OrderDetailController extends Controller
     {
         try {
             $orderDetails = OrderDetail::with(['order', 'product'])->get();
-            return response()->json($orderDetails);
+            return OrderDetailResource::collection($orderDetails);
         } catch (\Exception $e) {
             Log::error('API order details index error', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Error al obtener detalles de pedidos'], 500);
@@ -68,9 +69,10 @@ class OrderDetailController extends Controller
             ]);
 
             $orderDetail = OrderDetail::create($validated);
+            $orderDetail->load(['order', 'product']);
             Log::info('API order detail created', ['order_detail_id' => $orderDetail->id]);
 
-            return response()->json($orderDetail, 201);
+            return new OrderDetailResource($orderDetail);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'error' => 'Datos de validación incorrectos',
@@ -106,9 +108,10 @@ class OrderDetailController extends Controller
             ]);
 
             $orderDetail->update($validated);
+            $orderDetail->load(['order', 'product']);
             Log::info('API order detail updated', ['order_detail_id' => $orderDetail->id]);
 
-            return response()->json($orderDetail);
+            return new OrderDetailResource($orderDetail);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'error' => 'Datos de validación incorrectos',

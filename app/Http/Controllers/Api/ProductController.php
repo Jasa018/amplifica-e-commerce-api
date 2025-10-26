@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Http\Resources\ProductResource;
+use App\Http\Resources\ProductCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -35,7 +37,7 @@ class ProductController extends Controller
     {
         try {
             $products = Product::all();
-            return response()->json($products);
+            return new ProductCollection($products);
         } catch (\Exception $e) {
             Log::error('API products index error', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Error al obtener productos'], 500);
@@ -81,7 +83,7 @@ class ProductController extends Controller
             $product = Product::create($validatedData);
             Log::info('API product created', ['product_id' => $product->id]);
 
-            return response()->json($product, 201);
+            return new ProductResource($product);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'error' => 'Datos de validación incorrectos',
@@ -112,7 +114,7 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         try {
-            return response()->json($product);
+            return new ProductResource($product);
         } catch (\Exception $e) {
             Log::error('API product show error', ['error' => $e->getMessage(), 'product_id' => $product->id]);
             return response()->json(['error' => 'Error al obtener producto'], 500);
@@ -160,7 +162,7 @@ class ProductController extends Controller
             $product->update($validatedData);
             Log::info('API product updated', ['product_id' => $product->id]);
 
-            return response()->json($product);
+            return new ProductResource($product);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'error' => 'Datos de validación incorrectos',
