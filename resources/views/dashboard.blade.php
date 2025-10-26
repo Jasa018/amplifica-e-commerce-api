@@ -101,23 +101,23 @@
                         </div>
                     </div>
 
-                    <!-- Card Detalles de Pedidos -->
+                    <!-- Card Cotizaciones -->
                     <div class="bg-white overflow-hidden shadow rounded-lg">
                         <div class="p-5">
                             <div class="flex items-center">
-                                <div class="flex-shrink-0 bg-purple-500 rounded-md p-3">
+                                <div class="flex-shrink-0 bg-orange-500 rounded-md p-3">
                                     <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                                     </svg>
                                 </div>
                                 <div class="ml-5 w-0 flex-1">
                                     <dl>
                                         <dt class="text-sm font-medium text-gray-500 truncate">
-                                            Detalles de Pedidos
+                                            Cotizaciones
                                         </dt>
                                         <dd class="flex items-baseline">
                                             <div class="text-2xl font-semibold text-gray-900">
-                                                {{ App\Models\OrderDetail::count() }}
+                                                Envío
                                             </div>
                                         </dd>
                                     </dl>
@@ -126,8 +126,8 @@
                         </div>
                         <div class="bg-gray-50 px-5 py-3">
                             <div class="text-sm">
-                                <a href="{{ route('order-details.index') }}" class="font-medium text-purple-600 hover:text-purple-900">
-                                    Ver todos
+                                <a href="{{ route('cotizaciones.index') }}" class="font-medium text-orange-600 hover:text-orange-900">
+                                    Cotizar
                                 </a>
                             </div>
                         </div>

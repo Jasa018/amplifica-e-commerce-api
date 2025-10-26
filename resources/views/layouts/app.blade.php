@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') - E-commerce</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -24,6 +25,9 @@
                         </a>
                         <a href="{{ route('orders.index') }}" class="{{ request()->routeIs('orders.*') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                             Pedidos
+                        </a>
+                        <a href="{{ route('cotizaciones.index') }}" class="{{ request()->routeIs('cotizaciones.*') ? 'border-indigo-500 text-gray-900' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700' }} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            Cotizaciones
                         </a>
                     </div>
                 </div>
