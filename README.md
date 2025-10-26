@@ -23,11 +23,13 @@ chmod +x setup.sh
 ```
 
 El script automático realizará:
-- Construcción de contenedores Docker
+- Configuración de variables de entorno
 - Instalación de dependencias PHP
+- Construcción de contenedores Docker
 - Configuración de base de datos
 - Ejecución de migraciones y seeders
-- Configuración del servidor web
+- Configuración de permisos
+- Limpieza de cache y optimización
 
 **Acceso después de la instalación:**
 - **Aplicación Web**: http://localhost
@@ -44,7 +46,24 @@ git clone <repository-url>
 cd amplifica-e-commerce-api
 ```
 
-### 2. Construir Contenedores Docker
+### 2. Configurar Variables de Entorno
+```bash
+# Copiar archivo de configuración
+cp .env.example .env
+
+# Editar .env con tu configuración si es necesario
+```
+
+### 3. Instalar Dependencias PHP
+```bash
+# Instalar dependencias con Composer (requiere PHP local)
+composer install
+
+# O usar Docker para instalar dependencias
+docker run --rm -v $(pwd):/app composer install
+```
+
+### 4. Construir Contenedores Docker
 ```bash
 # Construir y levantar contenedores
 docker-compose up -d --build
@@ -53,43 +72,56 @@ docker-compose up -d --build
 docker-compose ps
 ```
 
-### 3. Instalar Dependencias PHP
+### 5. Esperar que MySQL esté listo
 ```bash
-# Ejecutar composer dentro del contenedor
-docker-compose exec app composer install
-
-# O alternativamente
-docker exec -it amplifica-app composer install
+# Verificar que MySQL esté funcionando
+docker-compose exec mysql mysql -u root -ppassword -e "SELECT 1"
 ```
 
-### 4. Configurar Variables de Entorno
+### 6. Generar Clave de Aplicación
 ```bash
-# Copiar archivo de configuración
-cp .env.example .env
-
-# Generar clave de aplicación
-docker-compose exec app php artisan key:generate
+# Generar clave de aplicación Laravel
+docker-compose exec laravel.test php artisan key:generate
 ```
 
-### 5. Configurar Base de Datos
+### 7. Configurar Base de Datos
 ```bash
 # Ejecutar migraciones
-docker-compose exec app php artisan migrate
+docker-compose exec laravel.test php artisan migrate
 
 # Ejecutar seeders (datos de prueba)
-docker-compose exec app php artisan db:seed
+docker-compose exec laravel.test php artisan db:seed
 ```
 
-### 6. Configurar Permisos
+### 8. Configurar Permisos
 ```bash
-# Dar permisos a directorios de Laravel
-docker-compose exec app chmod -R 775 storage bootstrap/cache
-docker-compose exec app chown -R www-data:www-data storage bootstrap/cache
+# Dar permisos completos a storage y bootstrap/cache
+docker-compose exec laravel.test chmod -R 777 storage
+docker-compose exec laravel.test chown -R www-data:www-data storage
+docker-compose exec laravel.test chmod -R 775 bootstrap/cache
 ```
 
-### 7. Verificar Instalación
+### 9. Limpiar Cache y Optimizar
+```bash
+# Limpiar cache y optimizar aplicación
+docker-compose exec laravel.test php artisan config:clear
+docker-compose exec laravel.test php artisan view:clear
+docker-compose exec laravel.test php artisan cache:clear
+docker-compose exec laravel.test php artisan optimize
+```
+
+### 10. Verificar Instalación
 - Acceder a: http://localhost
 - Login con: admin@example.com / password
+
+**Nota:** Si encuentras errores de permisos en views, ejecuta:
+```bash
+# Solución completa para errores de permisos
+docker-compose exec laravel.test chmod -R 777 storage
+docker-compose exec laravel.test chown -R www-data:www-data storage
+docker-compose exec laravel.test php artisan view:clear
+docker-compose exec laravel.test php artisan config:clear
+```
 
 ---
 
@@ -150,6 +182,8 @@ El dashboard muestra un resumen del sistema con:
 - **Editar productos** existentes
 - **Eliminar productos** del catálogo
 - **Visualizar lista** de todos los productos
+- **Filtros avanzados** por nombre, precio y stock
+- **Paginación** de 10 elementos por página
 
 ### Gestión de Pedidos
 - **Crear pedidos** seleccionando productos del catálogo
@@ -157,6 +191,8 @@ El dashboard muestra un resumen del sistema con:
 - **Editar pedidos** existentes con productos dinámicos
 - **Eliminar pedidos** del sistema
 - **Visualización detallada** de cada pedido
+- **Filtros avanzados** por cliente, fechas y total
+- **Paginación** de 10 elementos por página
 
 ### Gestión de Usuarios
 - **Crear usuarios** con información completa (nombre, email, contraseña)
@@ -164,6 +200,9 @@ El dashboard muestra un resumen del sistema con:
 - **Eliminar usuarios** del sistema (con protección contra auto-eliminación)
 - **Visualizar lista** de todos los usuarios registrados
 - **Ver detalles** de usuarios individuales
+- **Filtros avanzados** por nombre, email y fecha de creación
+- **Paginación** de 10 elementos por página
+- **API completa** con Resource Collections y tests automatizados
 
 ### Sistema de Cotizaciones
 - **Selección de región y comuna** en cascada
@@ -460,6 +499,58 @@ Este proyecto fue desarrollado utilizando **Geminis**, **Copilot** y **Amazon Q*
 - **Validaciones exhaustivas** de datos de entrada
 - **Arquitectura escalable** y mantenible
 - **Tests automatizados** con PHPUnit y cobertura completa
+
+---
+
+## 🔧 Solución de Problemas
+
+### Error de Permisos en Views
+Si encuentras el error:
+```
+file_put_contents(/var/www/html/storage/framework/views/...): Failed to open stream: Permission denied
+```
+
+**Solución:**
+```bash
+# Corregir permisos de directorios Laravel
+docker-compose exec laravel.test chmod -R 775 storage bootstrap/cache
+docker-compose exec laravel.test chown -R www-data:www-data storage bootstrap/cache
+
+# Limpiar cache de views
+docker-compose exec laravel.test php artisan view:clear
+docker-compose exec laravel.test php artisan config:clear
+```
+
+### Otros Problemas Comunes
+
+**Contenedores no inician:**
+```bash
+# Verificar estado
+docker-compose ps
+
+# Ver logs
+docker-compose logs laravel.test
+docker-compose logs mysql
+
+# Reiniciar servicios
+docker-compose restart
+```
+
+**Base de datos no conecta:**
+```bash
+# Esperar a que MySQL esté listo
+docker-compose exec mysql mysql -u root -p -e "SHOW DATABASES;"
+
+# Recrear base de datos
+docker-compose exec laravel.test php artisan migrate:fresh --seed
+```
+
+**Puerto 80 ocupado:**
+```bash
+# Cambiar puerto en docker-compose.yml
+# Modificar: "80:80" por "8080:80"
+# Acceder en: http://localhost:8080
+```
 
 ---
 

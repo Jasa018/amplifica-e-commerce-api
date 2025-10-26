@@ -15,7 +15,26 @@ if %errorlevel% neq 0 (
 echo ✓ Docker Desktop detectado
 
 echo.
-echo [2/7] Construyendo contenedores Docker...
+echo [2/7] Configurando variables de entorno...
+if not exist .env (
+    copy .env.example .env >nul
+    echo ✓ Archivo .env creado
+) else (
+    echo ✓ Archivo .env ya existe
+)
+
+echo.
+echo [3/7] Instalando dependencias PHP...
+docker run --rm -v %cd%:/app composer install --no-interaction --optimize-autoloader
+if %errorlevel% neq 0 (
+    echo ERROR: Fallo al instalar dependencias
+    pause
+    exit /b 1
+)
+echo ✓ Dependencias instaladas
+
+echo.
+echo [4/7] Construyendo contenedores Docker...
 docker-compose up -d --build
 if %errorlevel% neq 0 (
     echo ERROR: Fallo al construir contenedores
@@ -25,30 +44,26 @@ if %errorlevel% neq 0 (
 echo ✓ Contenedores construidos exitosamente
 
 echo.
-echo [3/7] Esperando que los servicios esten listos...
-timeout /t 10 /nobreak >nul
-echo ✓ Servicios iniciados
-
-echo.
-echo [4/7] Instalando dependencias PHP...
-docker-compose exec -T app composer install --no-interaction --optimize-autoloader
+echo [5/9] Esperando que MySQL este listo...
+echo Verificando conexion a base de datos...
+:wait_mysql
+docker-compose exec -T mysql mysql -u root -ppassword -e "SELECT 1" >nul 2>&1
 if %errorlevel% neq 0 (
-    echo ERROR: Fallo al instalar dependencias
-    pause
-    exit /b 1
+    echo Esperando MySQL...
+    timeout /t 5 /nobreak >nul
+    goto wait_mysql
 )
-echo ✓ Dependencias instaladas
+echo ✓ MySQL esta listo
 
 echo.
-echo [5/7] Configurando aplicacion...
-docker-compose exec -T app cp .env.example .env
-docker-compose exec -T app php artisan key:generate --force
-echo ✓ Configuracion completada
+echo [6/9] Generando clave de aplicacion...
+docker-compose exec -T laravel.test php artisan key:generate --force
+echo ✓ Clave de aplicacion generada
 
 echo.
-echo [6/7] Configurando base de datos...
-docker-compose exec -T app php artisan migrate --force
-docker-compose exec -T app php artisan db:seed --force
+echo [7/9] Configurando base de datos...
+docker-compose exec -T laravel.test php artisan migrate --force
+docker-compose exec -T laravel.test php artisan db:seed --force
 if %errorlevel% neq 0 (
     echo ERROR: Fallo al configurar base de datos
     pause
@@ -57,10 +72,19 @@ if %errorlevel% neq 0 (
 echo ✓ Base de datos configurada
 
 echo.
-echo [7/7] Configurando permisos...
-docker-compose exec -T app chmod -R 775 storage bootstrap/cache
-docker-compose exec -T app chown -R www-data:www-data storage bootstrap/cache
+echo [8/9] Configurando permisos...
+docker-compose exec -T laravel.test chmod -R 777 storage
+docker-compose exec -T laravel.test chown -R www-data:www-data storage
+docker-compose exec -T laravel.test chmod -R 775 bootstrap/cache
 echo ✓ Permisos configurados
+
+echo.
+echo [9/9] Limpiando cache y optimizando...
+docker-compose exec -T laravel.test php artisan config:clear
+docker-compose exec -T laravel.test php artisan view:clear
+docker-compose exec -T laravel.test php artisan cache:clear
+docker-compose exec -T laravel.test php artisan optimize
+echo ✓ Cache limpiado y aplicacion optimizada
 
 echo.
 echo ========================================
