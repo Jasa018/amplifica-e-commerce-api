@@ -9,6 +9,15 @@ use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/orders",
+     *     summary="Listar pedidos",
+     *     tags={"Pedidos"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Lista de pedidos")
+     * )
+     */
     public function index()
     {
         try {
@@ -20,6 +29,24 @@ class OrderController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/orders",
+     *     summary="Crear pedido",
+     *     tags={"Pedidos"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"cliente_nombre", "fecha", "total"},
+     *             @OA\Property(property="cliente_nombre", type="string"),
+     *             @OA\Property(property="fecha", type="string", format="date"),
+     *             @OA\Property(property="total", type="number")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Pedido creado")
+     * )
+     */
     public function store(Request $request)
     {
         try {
@@ -44,6 +71,16 @@ class OrderController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/orders/{id}",
+     *     summary="Obtener pedido",
+     *     tags={"Pedidos"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Pedido encontrado")
+     * )
+     */
     public function show(Order $order)
     {
         try {
@@ -54,6 +91,16 @@ class OrderController extends Controller
         }
     }
 
+    /**
+     * @OA\Put(
+     *     path="/orders/{id}",
+     *     summary="Actualizar pedido",
+     *     tags={"Pedidos"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Pedido actualizado")
+     * )
+     */
     public function update(Request $request, Order $order)
     {
         try {
@@ -78,6 +125,16 @@ class OrderController extends Controller
         }
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/orders/{id}",
+     *     summary="Eliminar pedido",
+     *     tags={"Pedidos"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Pedido eliminado")
+     * )
+     */
     public function destroy(Order $order)
     {
         try {

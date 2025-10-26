@@ -11,6 +11,15 @@ use Illuminate\Support\Facades\Log;
 
 class OrderDetailController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/order-details",
+     *     summary="Listar detalles de pedidos",
+     *     tags={"Detalles de Pedidos"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Lista de detalles")
+     * )
+     */
     public function index()
     {
         try {
@@ -29,6 +38,25 @@ class OrderDetailController extends Controller
         return response()->json(['orders' => $orders, 'products' => $products]);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/order-details",
+     *     summary="Crear detalle de pedido",
+     *     tags={"Detalles de Pedidos"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"order_id", "product_id", "quantity", "unit_price"},
+     *             @OA\Property(property="order_id", type="integer"),
+     *             @OA\Property(property="product_id", type="integer"),
+     *             @OA\Property(property="quantity", type="integer"),
+     *             @OA\Property(property="unit_price", type="number")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Detalle creado")
+     * )
+     */
     public function store(Request $request)
     {
         try {

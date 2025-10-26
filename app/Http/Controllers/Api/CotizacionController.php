@@ -9,6 +9,44 @@ use Illuminate\Support\Facades\Log;
 
 class CotizacionController extends Controller
 {
+    /**
+     * @OA\Post(
+     *     path="/cotizar",
+     *     summary="Cotizar envío",
+     *     tags={"Cotizaciones"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"comuna", "productos"},
+     *             @OA\Property(property="comuna", type="string", example="Providencia"),
+     *             @OA\Property(
+     *                 property="productos",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="weight", type="number", example=1.5),
+     *                     @OA\Property(property="quantity", type="integer", example=2)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Tarifas de envío",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="name", type="string", example="Tarifa Express"),
+     *                 @OA\Property(property="code", type="string", example="EXP"),
+     *                 @OA\Property(property="price", type="number", example=4990),
+     *                 @OA\Property(property="transitDays", type="integer", example=0)
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Error de validación"),
+     *     @OA\Response(response=503, description="Error de conexión")
+     * )
+     */
     private AmplificaApiService $amplificaService;
 
     public function __construct(AmplificaApiService $amplificaService)

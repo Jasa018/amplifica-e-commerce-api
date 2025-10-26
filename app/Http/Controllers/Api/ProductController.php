@@ -9,6 +9,28 @@ use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/products",
+     *     summary="Listar productos",
+     *     tags={"Productos"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de productos",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="id", type="integer"),
+     *                 @OA\Property(property="name", type="string"),
+     *                 @OA\Property(property="price", type="number"),
+     *                 @OA\Property(property="weight", type="number"),
+     *                 @OA\Property(property="stock", type="integer")
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function index()
     {
         try {
@@ -20,6 +42,29 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/products",
+     *     summary="Crear producto",
+     *     tags={"Productos"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name", "price", "weight", "width", "height", "length", "stock"},
+     *             @OA\Property(property="name", type="string", example="Producto ejemplo"),
+     *             @OA\Property(property="price", type="number", example=99.99),
+     *             @OA\Property(property="weight", type="number", example=1.5),
+     *             @OA\Property(property="width", type="number", example=10),
+     *             @OA\Property(property="height", type="number", example=5),
+     *             @OA\Property(property="length", type="number", example=15),
+     *             @OA\Property(property="stock", type="integer", example=100)
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Producto creado"),
+     *     @OA\Response(response=422, description="Error de validación")
+     * )
+     */
     public function store(Request $request)
     {
         try {
@@ -48,6 +93,22 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *     path="/products/{id}",
+     *     summary="Obtener producto",
+     *     tags={"Productos"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(response=200, description="Producto encontrado"),
+     *     @OA\Response(response=404, description="Producto no encontrado")
+     * )
+     */
     public function show(Product $product)
     {
         try {
@@ -58,6 +119,31 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * @OA\Put(
+     *     path="/products/{id}",
+     *     summary="Actualizar producto",
+     *     tags={"Productos"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string"),
+     *             @OA\Property(property="price", type="number"),
+     *             @OA\Property(property="weight", type="number"),
+     *             @OA\Property(property="stock", type="integer")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Producto actualizado"),
+     *     @OA\Response(response=422, description="Error de validación")
+     * )
+     */
     public function update(Request $request, Product $product)
     {
         try {
@@ -86,6 +172,22 @@ class ProductController extends Controller
         }
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/products/{id}",
+     *     summary="Eliminar producto",
+     *     tags={"Productos"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Response(response=200, description="Producto eliminado"),
+     *     @OA\Response(response=404, description="Producto no encontrado")
+     * )
+     */
     public function destroy(Product $product)
     {
         try {
