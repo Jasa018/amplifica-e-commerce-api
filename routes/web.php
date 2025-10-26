@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\OrderDetailController;
+use App\Http\Controllers\Web\ProductController;
+use App\Http\Controllers\Web\OrderController;
+use App\Http\Controllers\Web\OrderDetailController;
 
 Route::get('/', function () {
     return view('welcome');

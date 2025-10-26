@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
@@ -9,18 +10,12 @@ use Illuminate\Http\Request;
 
 class OrderDetailController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         $orderDetails = OrderDetail::with(['order', 'product'])->get();
         return view('order-details.index', compact('orderDetails'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $orders = Order::all();
@@ -28,9 +23,6 @@ class OrderDetailController extends Controller
         return view('order-details.create', compact('orders', 'products'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -46,18 +38,12 @@ class OrderDetailController extends Controller
                          ->with('success', 'Detalle de orden creado exitosamente.');
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(OrderDetail $orderDetail)
     {
         $orderDetail->load(['order', 'product']);
         return view('order-details.show', compact('orderDetail'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(OrderDetail $orderDetail)
     {
         $orders = Order::all();
@@ -65,9 +51,6 @@ class OrderDetailController extends Controller
         return view('order-details.edit', compact('orderDetail', 'orders', 'products'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, OrderDetail $orderDetail)
     {
         $request->validate([
@@ -83,9 +66,6 @@ class OrderDetailController extends Controller
                          ->with('success', 'Detalle de orden actualizado exitosamente.');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(OrderDetail $orderDetail)
     {
         $orderDetail->delete();

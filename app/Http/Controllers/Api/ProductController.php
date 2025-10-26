@@ -1,32 +1,18 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $products = Product::all();
-        return view('products.index', compact('products'));
+        return response()->json(Product::all());
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        return view('products.create');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $validatedData = $request->validate([
@@ -39,30 +25,16 @@ class ProductController extends Controller
             'stock' => 'required|integer|min:0',
         ]);
 
-        Product::create($validatedData);
+        $product = Product::create($validatedData);
 
-        return redirect()->route('products.index')->with('success', 'Producto creado exitosamente.');
+        return response()->json($product, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(Product $product)
     {
-        return view('products.show', compact('product'));
+        return response()->json($product);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Product $product)
-    {
-        return view('products.edit', compact('product'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, Product $product)
     {
         $validatedData = $request->validate([
@@ -77,16 +49,13 @@ class ProductController extends Controller
 
         $product->update($validatedData);
 
-        return redirect()->route('products.index')->with('success', 'Producto actualizado exitosamente.');
+        return response()->json($product);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Product $product)
     {
         $product->delete();
 
-        return redirect()->route('products.index')->with('success', 'Producto eliminado exitosamente.');
+        return response()->json(['message' => 'Producto eliminado exitosamente'], 200);
     }
 }
