@@ -10,6 +10,10 @@ use Illuminate\Http\Request;
 
 class OrderDetailController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['web', 'auth']);
+    }
     public function index()
     {
         $orderDetails = OrderDetail::with(['order', 'product'])->get();

@@ -9,16 +9,19 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\OrderDetailController;
 
 // Rutas públicas de autenticación
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/auth/login', [AuthController::class, 'login'])->name('api.auth.login');
 
 // Rutas protegidas
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', [AuthController::class, 'user']);
-    
-    Route::apiResource('products', ProductController::class);
-    Route::apiResource('orders', OrderController::class);
-    Route::apiResource('order-details', OrderDetailController::class);
+    Route::post('/auth/logout', [AuthController::class, 'logout'])->name('api.auth.logout');
+    Route::get('/auth/user', [AuthController::class, 'user'])->name('api.auth.user');
+
+    // Nombrar las rutas API con prefijo `api.` para evitar colisiones con las web
+    Route::name('api.')->group(function () {
+        Route::apiResource('products', ProductController::class);
+        Route::apiResource('orders', OrderController::class);
+        Route::apiResource('order-details', OrderDetailController::class);
+    });
 });
 
 // Amplifica rutas

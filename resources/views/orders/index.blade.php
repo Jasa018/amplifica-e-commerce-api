@@ -1,136 +1,62 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Pedidos</title>
-    <style>
-        body {
-            font-family: sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            margin: 0;
-            padding: 2rem;
-        }
-        .container {
-            max-width: 900px;
-            margin: auto;
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #33533a; /* Color 1 */
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-        th, td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        thead {
-            background-color: #456547; /* Color 2 */
-            color: #deffb4; /* Color 5 */
-        }
-        tbody tr:nth-child(odd) {
-            background-color: #f9f9f9;
-        }
-        tbody tr:hover {
-            background-color: #98ba80; /* Color 4 */
-            color: white;
-        }
-        .alert-success {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            background-color: #deffb4; /* Color 5 */
-            color: #33533a; /* Color 1 */
-            border: 1px solid #98ba80; /* Color 4 */
-            border-radius: 4px;
-        }
-        .actions a {
-            color: #33533a;
-            text-decoration: none;
-            margin-right: 10px;
-        }
-        .actions a:hover {
-            text-decoration: underline;
-        }
-        .btn-delete {
-            background: none;
-            border: none;
-            color: #c0392b;
-            cursor: pointer;
-            text-decoration: none;
-            font-family: sans-serif;
-            font-size: 1em;
-            padding: 0;
-            margin: 0;
-        }
-        .btn-delete:hover {
-            text-decoration: underline;
-        }
-        .btn-create {
-            display: inline-block;
-            background-color: #65865d; /* Color 3 */
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 1rem;
-            margin-bottom: 1rem;
-        }
-        .btn-create:hover {
-            background-color: #456547; /* Color 2 */
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
+@extends('layouts.app')
+
+@section('title', 'Lista de Pedidos')
+
+@section('content')
+<div class="bg-white shadow rounded-lg">
         @if (session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <span class="block sm:inline">{{ session('success') }}</span>
             </div>
         @endif
 
-        <h1>Lista de Pedidos</h1>
-        <a href="{{ route('orders.create') }}" class="btn-create">Crear Nuevo Pedido</a>
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Cliente</th>
-                    <th>Fecha</th>
-                    <th>Total</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($orders as $order)
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-gray-800">Lista de Pedidos</h2>
+                <a href="{{ route('orders.create') }}" 
+                   class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200 ease-in-out transform hover:scale-105">
+                    Crear Nuevo Pedido
+                </a>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
                     <tr>
-                        <td>{{ $order->id }}</td>
-                        <td>{{ $order->cliente_nombre }}</td>
-                        <td>{{ $order->fecha }}</td>
-                        <td>${{ number_format($order->total, 2) }}</td>
-                        <td class="actions">
-                            <a href="{{ route('orders.show', $order->id) }}">Ver</a>
-                            <a href="{{ route('orders.edit', $order->id) }}">Editar</a>
-                            <form action="{{ route('orders.destroy', $order->id) }}" method="POST" style="display:inline;">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="btn-delete" onclick="return confirm('¿Estás seguro de que quieres eliminar este pedido?')">Eliminar</button>
-                            </form>
-                        </td>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                     </tr>
-                @endforeach
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach ($orders as $order)
+                        <tr class="hover:bg-gray-50 transition-colors duration-200">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $order->id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $order->cliente_nombre }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $order->fecha }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ number_format($order->total, 2) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                <a href="{{ route('orders.show', $order->id) }}" 
+                                   class="text-blue-600 hover:text-blue-900 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-full transition duration-200">Ver</a>
+                                <a href="{{ route('orders.edit', $order->id) }}" 
+                                   class="text-green-600 hover:text-green-900 bg-green-100 hover:bg-green-200 px-3 py-1 rounded-full transition duration-200">Editar</a>
+                                <form action="{{ route('orders.destroy', $order->id) }}" method="POST" class="inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" 
+                                            class="text-red-600 hover:text-red-900 bg-red-100 hover:bg-red-200 px-3 py-1 rounded-full transition duration-200"
+                                            onclick="return confirm('¿Estás seguro de que quieres eliminar este pedido?')">
+                                        Eliminar
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
-</body>
-</html>
+@endsection

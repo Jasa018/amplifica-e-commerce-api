@@ -8,6 +8,10 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['web', 'auth']);
+    }
     public function index()
     {
         $products = Product::all();
