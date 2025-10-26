@@ -15,18 +15,47 @@ class AmplificaApiService
     {
         try {
             return Cache::remember('amplifica_token', 55, function () {
-                $response = Http::post($this->baseUrl . '/auth', [
-                    'username' => 'joaquin.alamiro@ejemplo.com',
-                    'password' => '12345'
-                ]);
-
-                return $response->json('token');
+                return $this->requestNewToken();
             });
         } catch (ConnectionException $e) {
             throw new \Exception('Error de conexión con API Amplifica: ' . $e->getMessage());
         } catch (RequestException $e) {
             throw new \Exception('Error en solicitud a API Amplifica: ' . $e->getMessage());
         }
+    }
+
+    private function requestNewToken(): string
+    {
+        $response = Http::post($this->baseUrl . '/auth', [
+            'username' => 'joaquin.alamiro@ejemplo.com',
+            'password' => '12345'
+        ]);
+
+        if (!$response->successful()) {
+            throw new \Exception('Error al obtener token: ' . $response->body());
+        }
+
+        return $response->json('token');
+    }
+
+    private function makeAuthenticatedRequest(string $method, string $endpoint, array $data = []): array
+    {
+        $token = $this->getToken();
+        
+        $response = Http::withToken($token)->{$method}($this->baseUrl . $endpoint, $data);
+        
+        // Si el token expiró (401), renovar y reintentar
+        if ($response->status() === 401) {
+            Cache::forget('amplifica_token');
+            $token = $this->getToken();
+            $response = Http::withToken($token)->{$method}($this->baseUrl . $endpoint, $data);
+        }
+        
+        if (!$response->successful()) {
+            throw new \Exception('Error en API: ' . $response->body());
+        }
+        
+        return $response->json();
     }
 
     /**
@@ -63,12 +92,7 @@ class AmplificaApiService
     public function getRegionalConfig(): array
     {
         try {
-            $token = $this->getToken();
-            
-            $response = Http::withToken($token)
-                ->get($this->baseUrl . '/regionalConfig');
-
-            return $response->json();
+            return $this->makeAuthenticatedRequest('get', '/regionalConfig');
         } catch (ConnectionException $e) {
             throw new \Exception('Error de conexión con API Amplifica: ' . $e->getMessage());
         } catch (RequestException $e) {
@@ -79,15 +103,10 @@ class AmplificaApiService
     public function getRate(array $products, string $comuna): array
     {
         try {
-            $token = $this->getToken();
-
-            $response = Http::withToken($token)
-                ->post($this->baseUrl . '/getRate', [
-                    'comuna' => $comuna,
-                    'products' => $products
-                ]);
-
-            return $response->json();
+            return $this->makeAuthenticatedRequest('post', '/getRate', [
+                'comuna' => $comuna,
+                'products' => $products
+            ]);
         } catch (ConnectionException $e) {
             throw new \Exception('Error de conexión con API Amplifica: ' . $e->getMessage());
         } catch (RequestException $e) {

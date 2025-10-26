@@ -5,7 +5,7 @@ use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\ProductController;
 use App\Http\Controllers\Web\OrderController;
 use App\Http\Controllers\Web\OrderDetailController;
-use App\Http\Controllers\CotizacionWebController;
+use App\Http\Controllers\Web\CotizacionController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -28,6 +28,6 @@ Route::middleware(['web', 'auth'])->group(function () {
     Route::resource('order-details', OrderDetailController::class);
     
     // Rutas de cotización
-    Route::get('/cotizaciones', [CotizacionWebController::class, 'index'])->name('cotizaciones.index');
-    Route::post('/cotizar-envio', [CotizacionWebController::class, 'cotizar'])->name('cotizar-envio');
+    Route::get('/cotizaciones', [CotizacionController::class, 'index'])->name('cotizaciones.index');
+    Route::post('/cotizar-envio', [CotizacionController::class, 'cotizar'])->name('cotizar-envio');
 });

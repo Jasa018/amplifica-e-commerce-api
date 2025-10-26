@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Controller;
 use App\Services\AmplificaApiService;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
-class CotizacionWebController extends Controller
+class CotizacionController extends Controller
 {
     private AmplificaApiService $amplificaService;
 
